@@ -11,7 +11,7 @@ import pandas as pd
 st.set_page_config(page_title="狂盟血盟後台系統", page_icon="🏰", layout="wide")
 
 # =====================================================================
-# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V32 版)
+# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V33 版)
 # =====================================================================
 st.markdown("""
     <style>
@@ -180,26 +180,34 @@ st.markdown("""
         transform: scale(1.01) translateY(-2px);
     }
     
-    /* ⚡ 血誓不朽運算中動態等待框 ⚡ */
+    /* ⚡ 鐵血神殿：讀取請稍後核心對齊控制盒 ⚡ */
+    .clan-loading-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin-top: 5px;
+    }
     .clan-loading-box {
         width: 100%;
+        max-width: 600px;
         background: linear-gradient(135deg, #150505 0%, #080202 100%);
         border: 2px dashed #ff0000;
-        padding: 18px;
+        padding: 15px;
         text-align: center;
         border-radius: 8px;
-        box-shadow: 0 0 25px rgba(255,0,0,0.5);
+        box-shadow: 0 0 25px rgba(255,0,0,0.6);
         color: #ff3333;
         font-size: 18px;
         font-weight: bold;
         letter-spacing: 2px;
         animation: pulseBlinker 2s linear infinite;
-        height: 65px;
-        line-height: 25px;
+        height: 55px;
+        line-height: 22px;
     }
     @keyframes pulseBlinker {
         0% { opacity: 0.7; box-shadow: 0 0 15px rgba(255,0,0,0.3); }
-        50% { opacity: 1.0; box-shadow: 0 0 30px rgba(255,0,0,0.8); color: #ff9999; }
+        50% { opacity: 1.0; box-shadow: 0 0 30px rgba(255,0,0,0.9); color: #ffbcbc; }
         100% { opacity: 0.7; box-shadow: 0 0 15px rgba(255,0,0,0.3); }
     }
 
@@ -273,7 +281,7 @@ if url_t: st.session_state.sheet_url_targets = url_t.strip()
 if url_c: st.session_state.sheet_url_commanders = url_c.strip()
 
 # =====================================================================
-# 4. 🔥 徹底鏟除測試資料：改為純淨實時雲端抓取機制
+# 4. 🔥 鐵血指令：一律從 A2 開始精準抓取（完全無視 A1 標頭欄位）
 # =====================================================================
 VALID_NAMES = []
 base_targets = []
@@ -282,30 +290,28 @@ COMMANDER_LIST = []
 # 動態抓取成員白名單
 if st.session_state.sheet_url_members:
     try:
-        df_m = pd.read_csv(st.session_state.sheet_url_members, header=None, encoding='utf-8')
+        # header=None 將 A1 視為第 0 列數據，隨後用 skiprows=[0] 強制完全抹去 A1，從 A2 開始精準向後抓取
+        df_m = pd.read_csv(st.session_state.sheet_url_members, header=None, skiprows=[0], encoding='utf-8')
         if not df_m.empty:
-            raw_list = df_m.iloc[:, 0].dropna().astype(str).tolist()
-            VALID_NAMES = [x.strip() for x in raw_list if x.strip() and x.strip() != "姓名"]
+            VALID_NAMES = [str(x).strip() for x in df_m.iloc[:, 0].dropna().tolist() if str(x).strip()]
     except Exception as e:
         st.sidebar.error("⚠️ 無法讀取雲端成員名單，請確認網址。")
 
 # 動態抓取王怪目標
 if st.session_state.sheet_url_targets:
     try:
-        df_t = pd.read_csv(st.session_state.sheet_url_targets, header=None, encoding='utf-8')
+        df_t = pd.read_csv(st.session_state.sheet_url_targets, header=None, skiprows=[0], encoding='utf-8')
         if not df_t.empty:
-            raw_list = df_t.iloc[:, 0].dropna().astype(str).tolist()
-            base_targets = [x.strip() for x in raw_list if x.strip() and x.strip() != "目標"]
+            base_targets = [str(x).strip() for x in df_t.iloc[:, 0].dropna().tolist() if str(x).strip()]
     except Exception as e:
         st.sidebar.error("⚠️ 無法讀取雲端出團目標，請確認網址。")
 
 # 動態抓取最高指揮官
 if st.session_state.sheet_url_commanders:
     try:
-        df_c = pd.read_csv(st.session_state.sheet_url_commanders, header=None, encoding='utf-8')
+        df_c = pd.read_csv(st.session_state.sheet_url_commanders, header=None, skiprows=[0], encoding='utf-8')
         if not df_c.empty:
-            raw_list = df_c.iloc[:, 0].dropna().astype(str).tolist()
-            COMMANDER_LIST = [x.strip() for x in raw_list if x.strip() and x.strip() != "名字"]
+            COMMANDER_LIST = [str(x).strip() for x in df_c.iloc[:, 0].dropna().tolist() if str(x).strip()]
     except Exception as e:
         st.sidebar.error("⚠️ 無法讀取雲端指揮官名單，請確認網址。")
 
@@ -314,7 +320,7 @@ if st.session_state.sheet_url_commanders:
 # =====================================================================
 st.markdown("""
     <div class='clan-header'>
-        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V32</div>
+        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V33</div>
         <div class='clan-subtitle'>COMMAND CENTER • PURE CLOUD LIVE SYNCHRONIZED VERSION</div>
     </div>
 """, unsafe_allow_html=True)
@@ -425,9 +431,12 @@ else:
         if not api_key:
             st.error("⚠️ 老大！請先在左側邊欄鎖定您的 狂盟核心 API 金鑰！")
         elif uploaded_files:
+            # 🔥 底部置中升級：按鈕按下後，會在正下方跳出完美置中的精簡發光等待盒
             button_placeholder.markdown("""
-                <div class='clan-loading-box'>
-                    ⚡ 狂盟核心雲端最新資料已就緒 + 熔爐正全馬力運算... 請老大稍候...
+                <div class='clan-loading-wrapper'>
+                    <div class='clan-loading-box'>
+                        ⚡ 狂盟核心大會師：雲端熔爐正全馬力運算中... 請老大稍候...
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
             
@@ -532,7 +541,7 @@ else:
                 <div style="text-align: center; width: 100%;">
                     <button onclick="navigator.clipboard.writeText(`{escaped_text}`).then(() => alert('📋 報告老大：狂盟頂級數據已完美複製！請至 Excel 貼上。'));" 
                     style="width: 100%; background: linear-gradient(180deg, #cc0000 0%, #880000 100%); color: white; border: 2px solid #d4af37; padding: 18px; font-size: 18px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 6px 15px rgba(255,0,0,0.4); text-shadow: 1px 1px 3px #000; letter-spacing:2px;">
-                    	🦅 一鍵秒複製 7 大欄位狂盟核心數據 🦅
+                        🦅 一鍵秒複製 7 大欄位狂盟核心數據 🦅
                     </button>
                 </div>
                 """
