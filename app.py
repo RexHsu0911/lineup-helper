@@ -69,4 +69,128 @@
     <div class="form-group">
         <label>參戰名單截圖 (可多選)</label>
         <div class="upload-box" onclick="document.getElementById('file-input').click()">
-            <svg width="28
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <p>點擊上傳多張遊戲截圖</p>
+        </div>
+        <input type="file" id="file-input" multiple accept="image/*">
+        <div class="preview-container" id="preview-grid"></div>
+    </div>
+
+    <button class="btn-submit" onclick="callGeminiProAPI()">參團上傳</button>
+    <div class="status-bar" id="status-text">正在啟動 Gemini Pro 旗艦眼，深度解析圖片細節中...</div>
+
+    <div class="result-section" id="result-box">
+        <div class="textarea-group">
+            <label style="font-size: 1rem; color: var(--gold-primary); display: block; margin-bottom: 0.5rem;">📋 下方為可複製的純文字結果：</label>
+            <textarea id="member-list-input" readonly></textarea>
+            <button class="btn-secondary" onclick="copyToClipboard()">一鍵複製結果</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 自動生成日期
+    const dateSelect = document.getElementById('date-select');
+    for (let i = 0; i < 5; i++) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        const dateStr = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+        const option = document.createElement('option'); option.value = dateStr; option.textContent = dateStr;
+        dateSelect.appendChild(option);
+    }
+
+    const fileInput = document.getElementById('file-input');
+    const previewGrid = document.getElementById('preview-grid');
+    let uploadedFiles = [];
+
+    fileInput.addEventListener('change', function() {
+        for (let file of this.files) {
+            uploadedFiles.push(file);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+                item.innerHTML = `<img src="${e.target.result}">`;
+                previewGrid.appendChild(item);
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    function fileToGenerativePart(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64Data = reader.result.split(',')[1];
+                resolve({ inlineData: { data: base64Data, mimeType: file.type } });
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function callGeminiProAPI() {
+        const apiKey = document.getElementById('api-key-input').value.trim();
+        if (!apiKey) { alert('請先輸入您的 Gemini API Key！'); return; }
+        if (uploadedFiles.length === 0) { alert('請先上傳名單截圖！'); return; }
+
+        const statusText = document.getElementById('status-text');
+        statusText.style.display = 'block';
+
+        try {
+            const imageParts = await Promise.all(uploadedFiles.map(file => fileToGenerativePart(file)));
+            
+            // 提示詞全新調整：強制輸出為 序號 + TAB + 名字 + TAB + 職位
+            const prompt = `這是《天堂》遊戲的戰役隊伍截圖，請精準提取畫面中玩家的 ID。
+            
+【血盟已知通訊錄名單（優先對照修正模糊字，不可瞎猜）】：
+什麼漾子、湊人數、和尚洗髮水、煙雨遙、小熊闖天下、波波鼠、欣格格、佛、紫楓秋夜、大都督、一小法一、蘇州賣鴨蛋、霸氣小法、天降神運、淡水阿給、金派來的、粉色紅頭龜、飛翔的企鵝、168、紅心皇后、跑速達人、柯基、粉色KITTY、七條、淡鹹臉、筱駱駱、齊、霸气小君、跑皮達人。
+
+【輸出格式規範（極重要）】：
+請直接按以下 3 個欄位輸出，每一行代表一個人。欄位與欄位之間必須使用 \\t (Tab鍵) 分隔。不要有任何多餘的引言或客套話。
+
+欄位 A：自動產生的流水號序號（由 1 開始遞增）。
+欄位 B：玩家 ID。
+欄位 C：職位。如果是黃色或橘色字體的名字，填寫「隊長」；其餘白色或灰色字體的名字，一律填寫「隊員」。
+
+正確輸出範例格式：
+1\\t玩家名字1\\t隊長
+2\\t玩家名字2\\t隊員
+3\\t玩家名字3\\t隊員`;
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
+            
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, ...imageParts] }] })
+            });
+
+            const json = await response.json();
+            const reply = json.candidates[0].content.parts[0].text.trim();
+
+            statusText.style.display = 'none';
+            document.getElementById('result-box').style.display = 'block';
+            
+            // 輸出直接就是最乾淨的複製結果
+            document.getElementById('member-list-input').value = reply;
+            document.getElementById('result-box').scrollIntoView({ behavior: 'smooth' });
+
+        } catch (error) {
+            console.error(error);
+            statusText.textContent = '連線失敗！請檢查 API Key 是否正確。';
+        }
+    }
+
+    function copyToClipboard() {
+        const list = document.getElementById('member-list-input');
+        list.select();
+        list.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(list.value).then(() => { alert('純文字結果已成功複製！可直接前往 Excel 貼上 A1 欄位。'); });
+    }
+</script>
+
+</body>
+</html>
