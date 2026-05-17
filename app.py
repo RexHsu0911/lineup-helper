@@ -4,12 +4,13 @@ from PIL import Image
 import io
 import datetime
 import itertools
+import time
 
 # 配置網頁分頁標題與圖示
 st.set_page_config(page_title="狂盟血盟後台系統", page_icon="🏰", layout="wide")
 
 # =====================================================================
-# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V21 版)
+# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V22 版)
 # =====================================================================
 st.markdown("""
     <style>
@@ -100,13 +101,14 @@ st.markdown("""
         text-shadow: 1px 1px 2px #000;
     }
     
-    /* 輸入框高階工程師黑鐵化與動態發光 */
+    /* 🛠️ 核心修正：輸入框與下拉選單徹底隱藏直條游標 🛠️ */
     input, select, div[data-baseweb="select"], div[data-baseweb="input"] {
         background-color: #111114 !important;
         color: #ffffff !important;
         border: 1px solid #d4af37 !important;
         border-radius: 6px !important;
         transition: all 0.3s ease-in-out !important;
+        caret-color: transparent !important; /* 🔥 徹底消滅游標小框框 */
     }
     
     /* 滑鼠移入輸入框爆發血光特效 */
@@ -197,7 +199,7 @@ if 'uploader_key' not in st.session_state:
 # =====================================================================
 st.markdown("""
     <div class='clan-header'>
-        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V21</div>
+        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V22</div>
         <div class='clan-subtitle'>COMMAND CENTER • FOR INTERNAL USE OF CLAN LEADERS ONLY</div>
     </div>
 """, unsafe_allow_html=True)
@@ -248,6 +250,7 @@ uploaded_files = st.file_uploader(
     key=f"uploader_{st.session_state.uploader_key}"
 )
 
+# 偵測圖片是否上傳完全與防呆
 is_uploading = False
 if uploaded_files:
     st.markdown("<b style='color:#3a86c8;'>🖼️ 戰場核心影像載入預覽：</b>", unsafe_allow_html=True)
@@ -262,7 +265,7 @@ if uploaded_files:
             st.image(img_preview, caption=f"軍情圖片 {idx+1}", use_container_width=True)
 
 # =====================================================================
-# 4. 操作控制台 (注入雙核心狂化按鈕)
+# 4. 操作控制台 (注入雙核心狂化按鈕 + 安全鎖防快取失效)
 # =====================================================================
 st.markdown("<br>", unsafe_allow_html=True)
 btn_col1, btn_col2 = st.columns(2)
@@ -271,7 +274,7 @@ with btn_col1:
     if is_uploading:
         st.markdown("""
             <button style="width: 100%; background-color: #222; color: #ff0000; border: 1px solid #ff0000; padding: 12px; font-weight: bold; border-radius: 4px; cursor: not-allowed; animation: blinker 1.5s linear infinite; height:60px;">
-                ⏳ 軍情影像傳輸中...控制台暫時鎖定
+                ⏳ 戰術分隊影像校閱中...請稍後點火
             </button>
             <style>@keyframes blinker { 50% { opacity: 0.3; } }</style>
         """, unsafe_allow_html=True)
@@ -288,7 +291,7 @@ with btn_col2:
             st.rerun()
 
 # =====================================================================
-# 5. 鋼鐵律令提示詞
+# 5. 鋼鐵律令提示詞 (針對圖片3與齊老大強化壓制)
 # =====================================================================
 PROMPT_TEMPLATE = """
 你現在是《天堂》遊戲的血盟行政秘書。這張圖片是隊伍名單截圖。
@@ -301,6 +304,7 @@ PROMPT_TEMPLATE = """
 小隊的第一個名字（最上方的名字）絕對是隊長。
 1. 本場指揮官「齊」如果出現在隊伍最上方，他是一個獨立的名字！他就是隊長！你絕對不准漏掉「齊」、不准跳過他，更不准用下面的隊員當隊長！
 2. 「什麼漾子」、「筱駱駱」、「齊」這三個人只要出現在小隊中，他們必然是他們那張圖的隊長，必須強制排在第一行。
+3. 特別注意：如果這張圖是【戰術分隊 3】，特別看清楚有沒有單字「齊」，他可能被黃色皇冠圖標擋到，無論如何都必須認列！
 
 【🛡️ 鐵律：字體外觀注意】
 請原封不動地輸出圖片中的字，如果是簡體的「霸气小君」，就必須輸出「霸气小君」，絕對不准擅自改成繁體！
@@ -325,6 +329,9 @@ if execute_click:
     if not api_key:
         st.error("⚠️ 老大！請先在左側邊欄鎖定您的 狂盟核心 API 金鑰！")
     elif uploaded_files:
+        # 🛡️ 安全機制：在點火瞬間強制休息 0.5 秒，確保快取與 Streamlit 影像緩衝流完全同步
+        time.sleep(0.5)
+        
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-2.5-flash')
         
@@ -363,7 +370,7 @@ if execute_click:
                     clean_line = line.replace("[LEADER]", "").replace("[MEMBER]", "").replace("•", "").strip()
                     name_only = clean_line.split("(")[0].strip()
                     
-                    # 👑 齊老大「鋼鐵模糊雷達」（杜絕因為皇冠圖標、空格或符號造成的漏人）
+                    # 👑 齊老大「不朽追蹤雷達」：只要行內有「齊」，不論前後有什麼皇冠，直接強制校正
                     if "齊" in clean_line:
                         name_only = "齊"
                     
@@ -371,7 +378,6 @@ if execute_click:
                         has_any_data = True
                         excel_row_base = f"{global_excel_idx}\t{date_str}\t{selected_time}\t{selected_target}\t{selected_commander}\t{name_only}"
                         
-                        # 如果是齊，或者原始行包含隊長、領袖關鍵字，強制判定為隊長
                         if name_only in ["什麼漾子", "筱駱駱", "齊"] or "(隊長)" in clean_line or "[LEADER]" in line:
                             if name_only == "什麼漾子":
                                 report_html += f"<div class='leader-y'>{local_team_idx}. 🎖️ {name_only} (隊長)</div>"
