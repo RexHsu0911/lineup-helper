@@ -11,7 +11,7 @@ import pandas as pd
 st.set_page_config(page_title="狂盟血盟後台系統", page_icon="🏰", layout="wide")
 
 # =====================================================================
-# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V38 版)
+# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V39 版)
 # =====================================================================
 st.markdown("""
     <style>
@@ -99,7 +99,7 @@ st.markdown("""
     }
     .member-w { color: #e5e5e7; padding-left: 20px; margin: 6px 0; font-size: 16px; }
     
-    /* 🚨 老大鐵血指示：未列入白名單一律強制爆擊鮮紅字體 */
+    /* 🚨 鮮紅爆擊字體：未列入白名單(待確認/更新) 或 重複登記 */
     .unconfirmed-red {
         color: #ff0000 !important;
         font-weight: bold !important;
@@ -147,7 +147,7 @@ st.markdown("""
         padding: 15px;
     }
     
-    /* 💥 雙核心按鈕控制台 */
+    /* 💥 按鈕控制台 */
     div.stButton > button[key="attack_btn"] {
         background: linear-gradient(180deg, #ff0000 0%, #aa0000 50%, #660000 100%) !important;
         color: #ffffff !important;
@@ -221,7 +221,7 @@ st.markdown("""
         100% { opacity: 0.7; box-shadow: 0 0 15px rgba(255,0,0,0.3); }
     }
 
-    /* 👑 簡約風黑金鋼鐵戰術欄位示意表格 */
+    /* 👑 鋼鐵戰術欄位示意表格 */
     .clan-table-container {
         margin-top: 5px;
         margin-bottom: 5px;
@@ -260,7 +260,7 @@ if 'saved_api_key' not in st.session_state:
 if 'uploader_key' not in st.session_state:
     st.session_state['uploader_key'] = 0
 
-# 👑 秘書貼心鎖定：直接連結老大的雲端中央試算表
+# 直接連結老大的雲端中央試算表
 default_url_m = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTnOiq6sWHfimLY5BTNOSf5pyXHNcymkxYHr2hyN8ChS0qBt3qCcldc3cdqJu7BXzjZccA8dpwIiah/pub?gid=0&single=true&output=csv"
 default_url_t = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTnOiq6sWHfimLY5BTNOSf5pyXHNcymkxYHr2hyN8ChS0qBt3qCcldc3cdqJu7BXzjZccA8dpwIiah/pub?gid=850131825&single=true&output=csv"
 default_url_c = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTnOiq6sWHfimLY5BTNOSf5pyXHNcymkxYHr2hyN8ChS0qBt3qCcldc3cdqJu7BXzjZccA8dpwIiah/pub?gid=110345115&single=true&output=csv"
@@ -273,7 +273,7 @@ if 'sheet_url_commanders' not in st.session_state:
     st.session_state['sheet_url_commanders'] = default_url_c
 
 # =====================================================================
-# 3. 側邊欄：🌐 Google Sheet 究極雲端自動化控制台
+# 3. 側邊欄：🌐 Google Sheet 雲端連動設定中心
 # =====================================================================
 st.sidebar.markdown("<h3 style='color:#d4af37; text-align:center;'>🏰 神殿權限配置</h3>", unsafe_allow_html=True)
 api_key = st.sidebar.text_input("🔑 核心 API 認證金鑰：", value=st.session_state['saved_api_key'], type="password")
@@ -327,7 +327,7 @@ if st.session_state['sheet_url_commanders']:
 # =====================================================================
 st.markdown("""
     <div class='clan-header'>
-        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V38</div>
+        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V39</div>
         <div class='clan-subtitle'>COMMAND CENTER • LIVE SYNCHRONIZED FUZZY TOLERANT VERSION</div>
     </div>
 """, unsafe_allow_html=True)
@@ -431,7 +431,10 @@ else:
             model = genai.GenerativeModel('gemini-2.5-flash')
             
             date_str = selected_date.strftime("%Y%m%d")
-            raw_text_report = ""
+            
+            # 🛡️ 鐵血防重核心：用於記錄在「相同日期、相同時間」下已經登記過的姓名
+            # 只要在此 Session/執行中 出現過第二次，立即蓋上 (重複登記) 印記
+            REGISTERED_NAMES_POOL = set()
             
             report_html = f"""
             <div class='report-box'>
@@ -447,10 +450,10 @@ else:
             
             global_excel_idx = 1
             has_any_data = False
+            raw_text_report = ""
             
             white_list_str = "、".join(VALID_NAMES)
             
-            # ⚔️ 鐵血終極 Prompt 指令：強制要求挖出圖片上的所有人，不准漏字！
             PROMPT_TEMPLATE = (
                 "你現在是《天堂》遊戲血盟的頂級行政秘書。請對這張圖片左下角的「藍色小隊名單 UI 區塊」進行最嚴密、最全面的地毯式掃描。\n"
                 "必須找出名單中的每一個人，絕對不准漏掉任何一個字元！\n\n"
@@ -483,13 +486,12 @@ else:
                             continue
                         
                         matched_name = None
-                        # 精準與模糊多重碰撞
+                        # 多重碰撞過濾
                         for v_name in VALID_NAMES:
                             v_clean = v_name.replace(" ", "")
                             if v_clean in cleaned or cleaned in v_clean:
                                 matched_name = v_name
                                 break
-                            # 常見遊戲字型錯字替換
                             alt_cleaned = cleaned.replace("气", "氣").replace("1", "一").replace("漾", "什麼漾子")
                             alt_v = v_clean.replace("气", "氣").replace("1", "一")
                             if alt_v in alt_cleaned or alt_cleaned in alt_v:
@@ -498,27 +500,52 @@ else:
                         
                         is_leader = "[LEADER]" in line or "隊長" in line or local_team_idx == 1
                         position_str = "隊長" if is_leader else ""
-                        
                         has_any_data = True
                         
-                        # 🚨 核心邏輯：如果匹配成功（在白名單內）
-                        if matched_name:
+                        # 定義最終要處理的姓名主體
+                        final_target_name = matched_name if matched_name else cleaned
+                        
+                        # 🚨 鐵血重頭戲：檢查相同日期相同時間的場次中，姓名是否已經存在！
+                        is_duplicate = final_target_name in REGISTERED_NAMES_POOL
+                        
+                        # 將此姓名塞入池中，作為後面小隊的比對基底
+                        REGISTERED_NAMES_POOL.add(final_target_name)
+                        
+                        # 建立職位後綴字（僅網頁呈現用）
+                        leader_suffix = " (隊長)" if is_leader else ""
+                        
+                        # -------------------------------------------------------------
+                        # A. 如果是【重複登記】的抓包名單（優先權最高）
+                        # -------------------------------------------------------------
+                        if is_duplicate:
+                            display_name = f"{final_target_name}(重複登記)"
+                            excel_row_base = f"{global_excel_idx}\t{date_str}\t{selected_time}\t{selected_target}\t{selected_commander}\t{display_name}\t{position_str}\n"
+                            raw_text_report += excel_row_base
+                            
+                            # 網頁報告：強制爆擊紅字顯示 (重複登記)
+                            report_html += f"<div class='unconfirmed-red'>{local_team_idx}. ⚠️ {final_target_name} <span style='color:#ff0000; font-weight:bold;'>(重複登記)</span>{leader_suffix}</div>"
+                        
+                        # -------------------------------------------------------------
+                        # B. 如果是正常名單且【白名單匹配成功】
+                        # -------------------------------------------------------------
+                        elif matched_name:
                             excel_row_base = f"{global_excel_idx}\t{date_str}\t{selected_time}\t{selected_target}\t{selected_commander}\t{matched_name}\t{position_str}\n"
                             raw_text_report += excel_row_base
                             
                             if is_leader:
-                                report_html += f"<div class='leader-orange'>{local_team_idx}. 🎖️ {matched_name} (隊長)</div>"
+                                report_html += f"<div class='leader-orange'>{local_team_idx}. 🎖️ {matched_name}{leader_suffix}</div>"
                             else:
                                 report_html += f"<div class='member-w'>{local_team_idx}. {matched_name}</div>"
                         
-                        # 🚨 老大核心最高指示：如果匹配失敗（不在白名單內），原字樣強制輸出，並追加紅字標籤與警示！
+                        # -------------------------------------------------------------
+                        # C. 如果是正常名單但【不在白名單內】（待確認/更新）
+                        # -------------------------------------------------------------
                         else:
-                            display_unconfirmed = f"{cleaned}(待確認/更新)"
-                            excel_row_base = f"{global_excel_idx}\t{date_str}\t{selected_time}\t{selected_target}\t{selected_commander}\t{display_unconfirmed}\t{position_str}\n"
+                            display_name = f"{cleaned}(待確認/更新)"
+                            excel_row_base = f"{global_excel_idx}\t{date_str}\t{selected_time}\t{selected_target}\t{selected_commander}\t{display_name}\t{position_str}\n"
                             raw_text_report += excel_row_base
                             
-                            # 在網頁報告上以專屬無情暴擊紅字 CSS 渲染顯示
-                            report_html += f"<div class='unconfirmed-red'>{local_team_idx}. ⚠️ {cleaned} <span style='color:#ff0000; font-weight:bold;'>(待確認/更新)</span> {'(隊長)' if is_leader else ''}</div>"
+                            report_html += f"<div class='unconfirmed-red'>{local_team_idx}. ⚠️ {cleaned} <span style='color:#ff0000; font-weight:bold;'>(待確認/更新)</span>{leader_suffix}</div>"
                             
                         local_team_idx += 1
                         global_excel_idx += 1
@@ -559,7 +586,7 @@ else:
                 escaped_text = raw_text_report.strip().replace("`", "\\`").replace("'", "\\'")
                 js_button_html = f"""
                 <div style="text-align: center; width: 100%;">
-                    <button onclick="navigator.clipboard.writeText(`{escaped_text}`).then(() => alert('📋 報告老大：狂盟防錯修正版數據已完美複製！請至 Excel 貼上。'));" 
+                    <button onclick="navigator.clipboard.writeText(`{escaped_text}`).then(() => alert('📋 報告老大：時空防重校正版數據已完美複製！已自動打擊重複登记。'));" 
                     style="width: 100%; background: linear-gradient(180deg, #cc0000 0%, #880000 100%); color: white; border: 2px solid #d4af37; padding: 18px; font-size: 18px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 6px 15px rgba(255,0,0,0.4); text-shadow: 1px 1px 3px #000; letter-spacing:2px;">
                         🦅 一鍵秒複製 7 大欄位狂盟核心數據 🦅
                     </button>
