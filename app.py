@@ -11,7 +11,7 @@ import pandas as pd
 st.set_page_config(page_title="狂盟血盟後台系統", page_icon="🏰", layout="wide")
 
 # =====================================================================
-# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V36 版)
+# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V37 版)
 # =====================================================================
 st.markdown("""
     <style>
@@ -242,12 +242,13 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =====================================================================
-# 2. 暫存機制初始化
+# 2. 🛡️ 鐵血防禦：記憶體狀態安全錨點 (核心修正：直接破除生命週期不穩定)
 # =====================================================================
 if 'saved_api_key' not in st.session_state:
-    st.session_state.saved_api_key = ""
+    st.session_state['saved_api_key'] = ""
+
 if 'uploader_key' not in st.session_state:
-    st.session_state.uploader_key = 0
+    st.session_state['uploader_key'] = 0
 
 # 👑 秘書貼心鎖定：直接連結老大的雲端中央試算表
 default_url_m = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTnOiq6sWHfimLY5BTNOSf5pyXHNcymkxYHr2hyN8ChS0qBt3qCcldc3cdqJu7BXzjZccA8dpwIiah/pub?gid=0&single=true&output=csv"
@@ -255,30 +256,30 @@ default_url_t = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTnOiq6sWHfimL
 default_url_c = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTnOiq6sWHfimLY5BTNOSf5pyXHNcymkxYHr2hyN8ChS0qBt3qCcldc3cdqJu7BXzjZccA8dpwIiah/pub?gid=110345115&single=true&output=csv"
 
 if 'sheet_url_members' not in st.session_state:
-    st.session_state.sheet_url_members = default_url_m
+    st.session_state['sheet_url_members'] = default_url_m
 if 'sheet_url_targets' not in st.session_state:
-    st.session_state.sheet_url_targets = default_url_t
+    st.session_state['sheet_url_targets'] = default_url_t
 if 'sheet_url_commanders' not in st.session_state:
-    st.session_state.sheet_url_commanders = default_url_c
+    st.session_state['sheet_url_commanders'] = default_url_c
 
 # =====================================================================
 # 3. 側邊欄：🌐 Google Sheet 究極雲端自動化控制台
 # =====================================================================
 st.sidebar.markdown("<h3 style='color:#d4af37; text-align:center;'>🏰 神殿權限配置</h3>", unsafe_allow_html=True)
-api_key = st.sidebar.text_input("🔑 核心 API 認證金鑰：", value=st.session_state.saved_api_key, type="password")
+api_key = st.sidebar.text_input("🔑 核心 API 認證金鑰：", value=st.session_state['saved_api_key'], type="password")
 if api_key:
-    st.session_state.saved_api_key = api_key
+    st.session_state['saved_api_key'] = api_key
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("<h3 style='color:#00ffcc; text-align:center;'>🌐 雲端連動設定中心</h3>", unsafe_allow_html=True)
 
-url_m = st.sidebar.text_input("📋 1. 成員白名單 CSV 網址：", value=st.session_state.sheet_url_members)
-url_t = st.sidebar.text_input("🎯 2. 出團目標 CSV 網址：", value=st.session_state.sheet_url_targets)
-url_c = st.sidebar.text_input("👑 3. 指揮官名單 CSV 網址：", value=st.session_state.sheet_url_commanders)
+url_m = st.sidebar.text_input("📋 1. 成員白名單 CSV 網址：", value=st.session_state['sheet_url_members'])
+url_t = st.sidebar.text_input("🎯 2. 出團目標 CSV 網址：", value=st.session_state['sheet_url_targets'])
+url_c = st.sidebar.text_input("👑 3. 指揮官名單 CSV 網址：", value=st.session_state['sheet_url_commanders'])
 
-if url_m: st.session_state.sheet_url_members = url_m.strip()
-if url_t: st.session_state.sheet_url_targets = url_t.strip()
-if url_c: st.session_state.sheet_url_commanders = url_c.strip()
+if url_m: st.session_state['sheet_url_members'] = url_m.strip()
+if url_t: st.session_state['sheet_url_targets'] = url_t.strip()
+if url_c: st.session_state['sheet_url_commanders'] = url_c.strip()
 
 # =====================================================================
 # 4. 🔥 鐵血指令：一律從 A2 開始精準抓取（完全無視 A1 標頭欄位）
@@ -288,38 +289,38 @@ base_targets = []
 COMMANDER_LIST = []
 
 # 動態抓取成員白名單
-if st.session_state.sheet_url_members:
+if st.session_state['sheet_url_members']:
     try:
-        df_m = pd.read_csv(st.session_state.sheet_url_members, header=None, skiprows=[0], encoding='utf-8')
+        df_m = pd.read_csv(st.session_state['sheet_url_members'], header=None, skiprows=[0], encoding='utf-8')
         if not df_m.empty:
             VALID_NAMES = [str(x).strip() for x in df_m.iloc[:, 0].dropna().tolist() if str(x).strip()]
     except Exception as e:
         st.sidebar.error("⚠️ 無法讀取雲端成員名單，請確認網址。")
 
 # 動態抓取王怪目標
-if st.session_state.sheet_url_targets:
+if st.session_state['sheet_url_targets']:
     try:
-        df_t = pd.read_csv(st.session_state.sheet_url_targets, header=None, skiprows=[0], encoding='utf-8')
+        df_t = pd.read_csv(st.session_state['sheet_url_targets'], header=None, skiprows=[0], encoding='utf-8')
         if not df_t.empty:
             base_targets = [str(x).strip() for x in df_t.iloc[:, 0].dropna().tolist() if str(x).strip()]
     except Exception as e:
         st.sidebar.error("⚠️ 無法讀取雲端出團目標，請確認網址。")
 
 # 動態抓取最高指揮官
-if st.session_state.sheet_url_commanders:
+if st.session_state['sheet_url_commanders']:
     try:
-        df_c = pd.read_csv(st.session_state.sheet_url_commanders, header=None, skiprows=[0], encoding='utf-8')
+        df_c = pd.read_csv(st.session_state['sheet_url_commanders'], header=None, skiprows=[0], encoding='utf-8')
         if not df_c.empty:
             COMMANDER_LIST = [str(x).strip() for x in df_c.iloc[:, 0].dropna().tolist() if str(x).strip()]
     except Exception as e:
-        st.sidebar.error("⚠️ 無法讀取雲端指揮官名單，請確認網址。")
+        st.sidebar.error("⚠️ 無法讀取雲端指揮官名單，請確認網址. ")
 
 # =====================================================================
 # 5. 主介面：安全防空鎖
 # =====================================================================
 st.markdown("""
     <div class='clan-header'>
-        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V36</div>
+        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V37</div>
         <div class='clan-subtitle'>COMMAND CENTER • LIVE SYNCHRONIZED FUZZY TOLERANT VERSION</div>
     </div>
 """, unsafe_allow_html=True)
@@ -354,11 +355,13 @@ else:
 
     st.markdown("<br><div class='section-tag'>📸 戰場軍情影像熔爐</div>", unsafe_allow_html=True)
 
+    # 🛡️ 雙向防禦保險，確保傳入 Uploader 的 Key 絕對恆定存在
+    current_key_val = st.session_state.get('uploader_key', 0)
     uploaded_files = st.file_uploader(
         "請將本次戰役的所有小隊截圖拖曳至此：", 
         accept_multiple_files=True, 
         type=['png', 'jpg', 'jpeg'],
-        key=f"uploader_{st.session_state.uploader_key}"
+        key=f"uploader_{current_key_val}"
     )
 
     is_uploading = False
@@ -398,7 +401,7 @@ else:
             pass
         else:
             if st.button("🔄 熔爐重置 / 清理當前戰報準備下一場", key="reset_btn", use_container_width=True):
-                st.session_state.uploader_key += 1
+                st.session_state['uploader_key'] = st.session_state.get('uploader_key', 0) + 1
                 st.rerun()
 
     # =====================================================================
@@ -441,7 +444,7 @@ else:
             
             white_list_str = "、".join(VALID_NAMES)
             
-            # 💥 使用圓括號多行字串串接，徹底阻絕縮排跟三引號衝突 💥
+            # 使用圓括號防護防禦，徹底杜絕多行字串與縮排衝突
             PROMPT_TEMPLATE = (
                 "你現在是《天堂》遊戲血盟的頂級行政秘書。請對這張圖片左下角的「藍色小隊名單 UI 區塊」進行最嚴密、最全面的地毯式掃描。\n"
                 "必須找出名單中的每一個人，絕對不准漏掉任何一個字元！\n\n"
