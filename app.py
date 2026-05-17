@@ -1,234 +1,72 @@
-import streamlit as st
-import google.generativeai as genai
-from PIL import Image
-import io
-import datetime
-import itertools
-
-# =====================================================================
-# 1. 網頁頂級金黑神殿視覺風格 (CSS)
-# =====================================================================
-st.markdown("""
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天堂戰役物資津貼統計系統 - Excel 優化版</title>
     <style>
-    .main { background-color: #121212; color: #ffffff; }
-    h1 { color: #f1c40f; text-align: center; font-family: 'Microsoft JhengHei'; }
-    .report-box { background-color: #1a1a1a; border: 2px solid #d4af37; padding: 25px; border-radius: 12px; }
-    .img-title { color: #3498db; font-weight: bold; font-size: 16px; margin-top: 20px; display: block; }
-    .leader-y { color: #f1c40f; font-weight: bold; padding-left: 15px; }
-    .leader-o { color: #e67e22; font-weight: bold; padding-left: 15px; }
-    .member-w { color: #ffffff; padding-left: 15px; margin: 3px 0; }
-    /* 讓縮圖排版好看 */
-    .thumb-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        :root {
+            --bg-dark: #0f0f0f;
+            --bg-card: #161616;
+            --gold-primary: #d4af37;
+            --gold-hover: #f3e5ab;
+            --text-light: #e0e0e0;
+            --text-muted: #777777;
+            --border-color: #262626;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text-light); padding: 2rem 1rem; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+        .container { width: 100%; max-width: 900px; background: var(--bg-card); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 2rem; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9); }
+        .header-zone { text-align: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem; }
+        h1 { color: var(--gold-primary); font-size: 1.6rem; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--text-muted); font-size: 0.85rem; }
+        .api-zone { background: #1f1a0a; border: 1px solid #4a3b11; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; }
+        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; color: var(--gold-primary); font-size: 0.85rem; font-weight: 600; }
+        select, input[type="text"], textarea { width: 100%; padding: 0.8rem; background-color: #0a0a0a; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-light); font-size: 0.95rem; transition: all 0.3s ease; }
+        .upload-box { border: 1px dashed var(--gold-primary); padding: 2rem; text-align: center; border-radius: 8px; cursor: pointer; background-color: #0a0a0a; }
+        #file-input { display: none; }
+        .preview-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 1rem; }
+        .preview-item { position: relative; width: 80px; height: 80px; border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; }
+        .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .btn-submit { width: 100%; padding: 1rem; background: linear-gradient(135deg, #c5a028, #ecca61); border: none; border-radius: 6px; color: #000; font-size: 1rem; font-weight: bold; letter-spacing: 2px; cursor: pointer; margin-top: 1rem; }
+        .status-bar { margin-top: 1rem; color: #ffcc00; font-size: 0.9rem; text-align: center; display: none; }
+        .result-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); display: none; }
+        .textarea-group textarea { height: 380px; font-family: monospace; font-size: 0.95rem; color: #fff; resize: none; line-height: 1.6; background-color: #0a0a0a; border: 1px solid var(--border-color); }
+        .btn-secondary { padding: 0.6rem 1.5rem; background: #222; border: 1px solid #444; color: #ccc; border-radius: 4px; font-size: 0.85rem; cursor: pointer; margin-top: 0.5rem; float: right; }
+        .btn-secondary:hover { background: #333; color: #fff; border-color: var(--gold-primary); }
     </style>
-""", unsafe_allow_html=True)
+</head>
+<body>
 
-st.title("🏰 天堂血盟 - 行政秘書免費 AI 網頁系統 V14")
+<div class="container">
+    <div class="header-zone">
+        <h1>Lineage 戰役津貼統計系統</h1>
+        <div class="subtitle">血盟行政秘書處 · Excel 彙整優化版</div>
+    </div>
 
-# =====================================================================
-# 2. 自動生成所有出團目標的排列組合 (下拉選單用)
-# =====================================================================
-base_targets = ["四色", "飛龍", "伊佛", "蟻媽媽", "克特", "掃街", "打架"]
-all_combinations = []
-# 產生 1 到 7 個目標的所有配對組合
-for r in range(1, len(base_targets) + 1):
-    for combo in itertools.combinations(base_targets, r):
-        all_combinations.append("+".join(combo))
-
-# 為了讓老大常用的組合排在最前面，做個貼心排序優化
-if "飛龍+四色+伊佛" in all_combinations:
-    all_combinations.remove("飛龍+四色+伊佛")
-all_combinations.insert(0, "飛龍+四色+伊佛") # 預設第一順位
-
-# 指揮官下拉選單清單
-COMMANDER_LIST = ["齊", "什麼漾子", "筱駱駱", "夜駱駝", "大都督", "副盟主1", "副盟主2"]
-
-# =====================================================================
-# 3. 初始化記憶庫 (用於清除重置功能)
-# =====================================================================
-if 'uploader_key' not in st.session_state:
-    st.session_state.uploader_key = 0
-
-# =====================================================================
-# 4. 前端極致優化選單輸入區
-# =====================================================================
-api_key = st.sidebar.text_input("🔑 請輸入 Google Gemini API Key:", type="password")
-
-st.markdown("<b style='color:#f1c40f; font-size:16px;'>⚔️ 參戰資訊設定：</b>", unsafe_allow_html=True)
-
-# 第一排：日期與時間選單
-col_date, col_time = st.columns(2)
-with col_date:
-    selected_date = st.date_input("📅 選擇日期:", datetime.date(2026, 5, 17))
-with col_time:
-    # 產生 0000 到 2300 的每小時選單
-    time_options = [f"{str(h).zfill(2)}00" for h in range(24)]
-    selected_time = st.selectbox("⏰ 選擇時間 (每小時為單位):", options=time_options, index=8) # 預設 0800
-
-# 第二排：出團目標與指揮官選單
-col_target, col_cmd = st.columns(2)
-with col_target:
-    selected_target = st.selectbox("🎯 出團目標 (已包含所有排列組合):", options=all_combinations)
-with col_cmd:
-    selected_commander = st.selectbox("👑 本場指揮官:", options=COMMANDER_LIST, index=0)
-
-st.markdown("<hr style='border:0.5px solid #333;'>", unsafe_allow_html=True)
-
-# 圖片上傳區
-uploaded_files = st.file_uploader(
-    "📸 請上傳本次場次的所有遊戲截圖", 
-    accept_multiple_files=True, 
-    type=['png', 'jpg', 'jpeg'],
-    key=f"uploader_{st.session_state.uploader_key}"
-)
-
-# 🌟 核心視覺優化：只要有上傳圖，立刻在下方秀出精緻圖片縮圖！
-if uploaded_files:
-    st.markdown("<b style='color:#3498db;'>🖼️ 已上傳圖片縮圖預覽：</b>", unsafe_allow_html=True)
-    cols = st.columns(min(len(uploaded_files), 4)) # 一行最多放4張縮圖
-    for idx, file in enumerate(uploaded_files):
-        with cols[idx % 4]:
-            file_bytes = file.read()
-            # 重新讀取指針以免影響後面辨識
-            file.seek(0)
-            img_preview = Image.open(io.BytesIO(file_bytes))
-            st.image(img_preview, caption=f"圖片 {idx+1}", use_container_width=True)
-
-# =====================================================================
-# 5. 鋼鐵律令提示詞
-# =====================================================================
-PROMPT_TEMPLATE = """
-你現在是《天堂》遊戲的血盟行政秘書。這張圖片是隊伍名單截圖。
-請你直奔「左下角隊伍 UI 區」，完全忽略右側聊天室（例如淡水柯景騰等雜訊）。
-
-請嚴格、逐字對照以下【神盛核心白名單】：
-什麼漾子、湊人數、和尚洗髮水、煙雨遙、小熊闖天下、波波鼠、筱駱駱、佛、紫楓秋夜、大都督、一小法一、蘇州賣鴨蛋、霸气小君、霸氣小君、天降神運、齊、粉色紅頭龜、飛翔的企鵝、168、紅心皇后、跑皮達人、柯基、粉色KITTY、夜駱駝。
-
-【👑 鐵律：隊長特別注意】
-小隊的第一個名字（最上方的名字）是隊長。
-1. 當你看到只有單一個字「齊」在隊伍最上方時，他就是隊長！絕對不要漏掉他、也不要用下面的名字取代他！
-2. 「什麼漾子」、「筱駱駱」、「齊」這三個人只要出現在小隊中，他們必然是他們那張圖的隊長，必須排在第一行。
-
-【🛡️ 鐵律：字體外觀注意】
-請原封不動地輸出圖片中的字，如果是簡體的「霸气小君」，就必須輸出「霸气小君」，絕對不准擅自改成繁體！
-
-【輸出格式】：
-請精準依據以下格式輸出，名字後面括號寫(隊長)即可，不要回答任何額外的廢話：
-[LEADER] 隊長名字
-[MEMBER] 隊員1
-[MEMBER] 隊員2
-"""
-
-VALID_NAMES = [
-    "什麼漾子", "湊人數", "和尚洗髮水", "煙雨遙", "小熊闖天下", "波波鼠", 
-    "筱駱駱", "佛", "紫楓秋夜", "大都督", "一小法一", "蘇州賣鴨蛋", "霸氣小君", "霸气小君", "天降神運", 
-    "齊", "粉色紅頭龜", "飛翔的企鵝", "168", "紅心皇后", "跑皮達人", "柯基", "粉色KITTY", "夜駱駝"
-]
-
-# =====================================================================
-# 6. 操作按鈕功能區
-# =====================================================================
-st.markdown("<br>", unsafe_allow_html=True)
-btn_col1, btn_col2 = st.columns(2)
-
-with btn_col1:
-    execute_click = st.button("🔥 執行 100% 免費大模型精準名單認列", use_container_width=True)
-
-with btn_col2:
-    if st.button("🔄 清除本場 / 恢復預設準備下一場", use_container_width=True):
-        st.session_state.uploader_key += 1
-        st.rerun()
-
-# =====================================================================
-# 7. 核心處理與報告輸出
-# =====================================================================
-if execute_click:
-    if not api_key:
-        st.error("⚠️ 老大，請先在左側邊欄填入您的 Google API 金鑰喔！")
-    elif uploaded_files:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        
-        # 格式化日期輸出 (例如 20260517)
-        date_str = selected_date.strftime("%Y%m%d")
-        
-        # 1:1 還原老大指定的最完美純文字複製範本
-        raw_text_report = (
-            f"✨ 已為您讀取並認列此場次的隊員名單：\n"
-            f"場次資訊\n"
-            f"日期:{date_str}\n"
-            f"時間:{selected_time}\n"
-            f"出團目標:{selected_target}\n"
-            f"指揮官：{selected_commander}\n\n"
-        )
-        
-        # 網頁端的奢華排版
-        report_html = f"""
-        <div class='report-box'>
-            <span style='color: #2ecc71; font-weight: bold; font-size: 18px;'>✨ 已為您讀取並認列此場次的隊員名單：</span><br>
-            <div style='font-size: 15px; margin: 10px 0 20px 0; line-height:1.5;'>
-                <b>場次資訊</b><br>
-                • 日期: {date_str}<br>
-                • 時間: {selected_time}<br>
-                • 出團目標: {selected_target}<br>
-                • 指揮官：{selected_commander}
-            </div>
-        """
-        
-        for idx, file in enumerate(uploaded_files, start=1):
-            file.seek(0)
-            file_bytes = file.read()
-            pil_image = Image.open(io.BytesIO(file_bytes))
-            
-            try:
-                response = model.generate_content([PROMPT_TEMPLATE, pil_image])
-                ai_output = response.text
-                lines = ai_output.strip().split('\n')
-                
-                report_html += f"<span class='img-title'>📸 圖片 {idx} ({file.name}) 名單：</span><br>"
-                raw_text_report += f"📸 圖片 {idx} ({file.name}) 名單：\n\n"
-                
-                member_idx = 1
-                
-                for line in lines:
-                    clean_line = line.replace("[LEADER]", "").replace("[MEMBER]", "").replace("•", "").strip()
-                    name_only = clean_line.split("(")[0].strip()
-                    
-                    if name_only in VALID_NAMES:
-                        if name_only in ["什麼漾子", "筱駱駱", "齊"] or "(隊長)" in clean_line:
-                            if name_only == "什麼漾子":
-                                report_html += f"<div class='leader-y'>{member_idx}. {name_only} (隊長)</div>"
-                            else:
-                                report_html += f"<div class='leader-o'>{member_idx}. {name_only} (隊長)</div>"
-                            raw_text_report += f"{member_idx}. {name_only} (隊長)\n"
-                        else:
-                            report_html += f"<div class='member-w'>{member_idx}. {name_only}</div>"
-                            raw_text_report += f"{member_idx}. {name_only}\n"
-                        
-                        member_idx += 1
-                        
-                raw_text_report += "\n"
-                
-            except Exception as e:
-                st.error(f"圖片 {idx} 辨識出錯：{e}")
-                
-        report_html += "</div>"
-        
-        # 1. 顯示網頁結果
-        st.markdown(report_html, unsafe_allow_html=True)
-        
-        # 2. 顯示純文字框
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.text_area("📋 下方為可複製的純文字結果：", value=raw_text_report.strip(), height=250, key="copy_target")
-        
-        # 3. 🌟 【修復版：絕對按得到、秒複製的無敵大橫條按鈕】
-        # 直接利用 Streamlit 官方標準與 HTML 元件安全隔離，按下去保證一秒完美複製到剪貼簿！
-        escaped_text = raw_text_report.strip().replace("`", "\\`").replace("'", "\\'")
-        js_button_html = f"""
-        <div style="text-align: center; width: 100%;">
-            <button onclick="navigator.clipboard.writeText(`{escaped_text}`).then(() => alert('📋 報告老大：名單已成功複製！可直接去 LINE 貼上發餉。'));" 
-            style="width: 100%; background-color: #16a085; color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                📋 點我一鍵複製全文字名單
-            </button>
+    <div class="api-zone">
+        <label for="api-key-input" style="color: #ffcc00;">🔑 輸入免費的 Gemini API Key</label>
+        <input type="text" id="api-key-input" placeholder="AIzaSy..." style="margin-top: 0.5rem; border-color: #66521a;">
+    </div>
+    
+    <div class="grid-inputs">
+        <div class="form-group">
+            <label>戰役日期</label>
+            <select id="date-select"></select>
         </div>
-        """
-        st.components.v1.html(js_button_html, height=70)
+        <div class="form-group">
+            <label>戰役指揮官</label>
+            <select id="commander-select">
+                <option value="齊">齊</option>
+                <option value="什麼漾子">什麼漾子</option>
+                <option value="筱駱駱">筱駱駱</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>參戰名單截圖 (可多選)</label>
+        <div class="upload-box" onclick="document.getElementById('file-input').click()">
+            <svg width="28
