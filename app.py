@@ -11,7 +11,7 @@ import pandas as pd
 st.set_page_config(page_title="狂盟血盟後台系統", page_icon="🏰", layout="wide")
 
 # =====================================================================
-# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V37 版)
+# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V38 版)
 # =====================================================================
 st.markdown("""
     <style>
@@ -98,6 +98,16 @@ st.markdown("""
         text-shadow: 1px 1px 4px #000; 
     }
     .member-w { color: #e5e5e7; padding-left: 20px; margin: 6px 0; font-size: 16px; }
+    
+    /* 🚨 老大鐵血指示：未列入白名單一律強制爆擊鮮紅字體 */
+    .unconfirmed-red {
+        color: #ff0000 !important;
+        font-weight: bold !important;
+        padding-left: 20px;
+        font-size: 16px;
+        margin: 6px 0;
+        text-shadow: 0 0 10px rgba(255,0,0,0.5);
+    }
     
     /* 修改所有預設 Label 顏色為不朽金 */
     label { 
@@ -242,7 +252,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =====================================================================
-# 2. 🛡️ 鐵血防禦：記憶體狀態安全錨點 (核心修正：直接破除生命週期不穩定)
+# 2. 🛡️ 鐵血防禦：記憶體狀態安全錨點
 # =====================================================================
 if 'saved_api_key' not in st.session_state:
     st.session_state['saved_api_key'] = ""
@@ -282,13 +292,12 @@ if url_t: st.session_state['sheet_url_targets'] = url_t.strip()
 if url_c: st.session_state['sheet_url_commanders'] = url_c.strip()
 
 # =====================================================================
-# 4. 🔥 鐵血指令：一律從 A2 開始精準抓取（完全無視 A1 標頭欄位）
+# 4. 🔥 鐵血指令：動態抓取雲端數據
 # =====================================================================
 VALID_NAMES = []
 base_targets = []
 COMMANDER_LIST = []
 
-# 動態抓取成員白名單
 if st.session_state['sheet_url_members']:
     try:
         df_m = pd.read_csv(st.session_state['sheet_url_members'], header=None, skiprows=[0], encoding='utf-8')
@@ -297,7 +306,6 @@ if st.session_state['sheet_url_members']:
     except Exception as e:
         st.sidebar.error("⚠️ 無法讀取雲端成員名單，請確認網址。")
 
-# 動態抓取王怪目標
 if st.session_state['sheet_url_targets']:
     try:
         df_t = pd.read_csv(st.session_state['sheet_url_targets'], header=None, skiprows=[0], encoding='utf-8')
@@ -306,21 +314,20 @@ if st.session_state['sheet_url_targets']:
     except Exception as e:
         st.sidebar.error("⚠️ 無法讀取雲端出團目標，請確認網址。")
 
-# 動態抓取最高指揮官
 if st.session_state['sheet_url_commanders']:
     try:
         df_c = pd.read_csv(st.session_state['sheet_url_commanders'], header=None, skiprows=[0], encoding='utf-8')
         if not df_c.empty:
             COMMANDER_LIST = [str(x).strip() for x in df_c.iloc[:, 0].dropna().tolist() if str(x).strip()]
     except Exception as e:
-        st.sidebar.error("⚠️ 無法讀取雲端指揮官名單，請確認網址. ")
+        st.sidebar.error("⚠️ 無法讀取雲端指揮官名單，請確認網址。")
 
 # =====================================================================
-# 5. 主介面：安全防空鎖
+# 5. 主介面：戰略儀表板
 # =====================================================================
 st.markdown("""
     <div class='clan-header'>
-        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V37</div>
+        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V38</div>
         <div class='clan-subtitle'>COMMAND CENTER • LIVE SYNCHRONIZED FUZZY TOLERANT VERSION</div>
     </div>
 """, unsafe_allow_html=True)
@@ -355,7 +362,6 @@ else:
 
     st.markdown("<br><div class='section-tag'>📸 戰場軍情影像熔爐</div>", unsafe_allow_html=True)
 
-    # 🛡️ 雙向防禦保險，確保傳入 Uploader 的 Key 絕對恆定存在
     current_key_val = st.session_state.get('uploader_key', 0)
     uploaded_files = st.file_uploader(
         "請將本次戰役的所有小隊截圖拖曳至此：", 
@@ -444,17 +450,17 @@ else:
             
             white_list_str = "、".join(VALID_NAMES)
             
-            # 使用圓括號防護防禦，徹底杜絕多行字串與縮排衝突
+            # ⚔️ 鐵血終極 Prompt 指令：強制要求挖出圖片上的所有人，不准漏字！
             PROMPT_TEMPLATE = (
                 "你現在是《天堂》遊戲血盟的頂級行政秘書。請對這張圖片左下角的「藍色小隊名單 UI 區塊」進行最嚴密、最全面的地毯式掃描。\n"
                 "必須找出名單中的每一個人，絕對不准漏掉任何一個字元！\n\n"
                 f"請逐字核對以下【狂盟官方白名單】數據：\n{white_list_str}\n\n"
-                "【🔥 頂級特級鐵律：AI 模糊容錯與標準化校正】\n"
+                "【🔥 頂級特級鐵律：AI 模糊容錯與強制認列】\n"
                 "1. 由於遊戲字體與截圖清晰度問題，圖片中的文字可能產生簡繁錯置（如 氣 與 气）、相似字（如 1 與 一）或細微空格。\n"
-                "   只要圖片中的名字與上述【官方白名單】高度相似或音近，你必須「認列」並「自動轉換為白名單上的標準正確文字」輸出！\n"
+                "   只要圖片中的名字與上述【官方白名單】高度相似或音近，你必須「自動轉換為白名單上的標準正確文字」輸出！\n"
                 "2. 隊伍最上面第一行（正前方帶有黃金皇冠圖標）的名字是「隊長」。即使是最上面看到單字「齊」，他也是獨立的隊長行！絕對不准漏掉，不准跟下方的隊員合併！\n"
-                "3. 必須由上到下，將小隊中所有符合白名單（包含模糊相似）的名字通通挖掘出來，絕對不准遺漏任何一個隊員。每行一個名字。\n\n"
-                "【精準輸出格式】：\n不准輸出任何額外引言或廢話，嚴格依據以下格式回傳標準化後的白名單名字：\n"
+                "3. 核心大絕招：只要你看到任何名字（不論是否在白名單內），只要他出現在左下角小隊欄位中，就必須逐字完整輸出！如果在白名單內找不到任何可以對應的相似字，就直接原字原樣輸出！\n\n"
+                "【精準輸出格式】：\n不准輸出任何額外引言或廢話，嚴格依據以下格式回傳名字：\n"
                 "[LEADER] 隊長名字\n[MEMBER] 隊員名字\n[MEMBER] 隊員名字"
             )
             
@@ -473,34 +479,49 @@ else:
                     
                     for line in lines:
                         cleaned = line.replace("[LEADER]", "").replace("[MEMBER]", "").replace("(隊長)", "").replace(" ", "").strip()
+                        if not cleaned:
+                            continue
                         
                         matched_name = None
+                        # 精準與模糊多重碰撞
                         for v_name in VALID_NAMES:
                             v_clean = v_name.replace(" ", "")
                             if v_clean in cleaned or cleaned in v_clean:
                                 matched_name = v_name
                                 break
-                            alt_cleaned = cleaned.replace("气", "氣").replace("1", "一")
+                            # 常見遊戲字型錯字替換
+                            alt_cleaned = cleaned.replace("气", "氣").replace("1", "一").replace("漾", "什麼漾子")
                             alt_v = v_clean.replace("气", "氣").replace("1", "一")
                             if alt_v in alt_cleaned or alt_cleaned in alt_v:
                                 matched_name = v_name
                                 break
                         
+                        is_leader = "[LEADER]" in line or "隊長" in line or local_team_idx == 1
+                        position_str = "隊長" if is_leader else ""
+                        
+                        has_any_data = True
+                        
+                        # 🚨 核心邏輯：如果匹配成功（在白名單內）
                         if matched_name:
-                            has_any_data = True
-                            excel_row_base = f"{global_excel_idx}\t{date_str}\t{selected_time}\t{selected_target}\t{selected_commander}\t{matched_name}"
-                            
-                            is_leader = "[LEADER]" in line or "隊長" in line or local_team_idx == 1
+                            excel_row_base = f"{global_excel_idx}\t{date_str}\t{selected_time}\t{selected_target}\t{selected_commander}\t{matched_name}\t{position_str}\n"
+                            raw_text_report += excel_row_base
                             
                             if is_leader:
                                 report_html += f"<div class='leader-orange'>{local_team_idx}. 🎖️ {matched_name} (隊長)</div>"
-                                raw_text_report += f"{excel_row_base}\t隊長\n"
                             else:
                                 report_html += f"<div class='member-w'>{local_team_idx}. {matched_name}</div>"
-                                raw_text_report += f"{excel_row_base}\t\n"
+                        
+                        # 🚨 老大核心最高指示：如果匹配失敗（不在白名單內），原字樣強制輸出，並追加紅字標籤與警示！
+                        else:
+                            display_unconfirmed = f"{cleaned}(待確認/更新)"
+                            excel_row_base = f"{global_excel_idx}\t{date_str}\t{selected_time}\t{selected_target}\t{selected_commander}\t{display_unconfirmed}\t{position_str}\n"
+                            raw_text_report += excel_row_base
                             
-                            local_team_idx += 1
-                            global_excel_idx += 1
+                            # 在網頁報告上以專屬無情暴擊紅字 CSS 渲染顯示
+                            report_html += f"<div class='unconfirmed-red'>{local_team_idx}. ⚠️ {cleaned} <span style='color:#ff0000; font-weight:bold;'>(待確認/更新)</span> {'(隊長)' if is_leader else ''}</div>"
+                            
+                        local_team_idx += 1
+                        global_excel_idx += 1
                             
                 except Exception as e:
                     st.error(f"❌ 軍情影像 {idx} 處理失敗：{e}")
@@ -538,7 +559,7 @@ else:
                 escaped_text = raw_text_report.strip().replace("`", "\\`").replace("'", "\\'")
                 js_button_html = f"""
                 <div style="text-align: center; width: 100%;">
-                    <button onclick="navigator.clipboard.writeText(`{escaped_text}`).then(() => alert('📋 報告老大：狂盟頂級數據已完美複製！請至 Excel 貼上。'));" 
+                    <button onclick="navigator.clipboard.writeText(`{escaped_text}`).then(() => alert('📋 報告老大：狂盟防錯修正版數據已完美複製！請至 Excel 貼上。'));" 
                     style="width: 100%; background: linear-gradient(180deg, #cc0000 0%, #880000 100%); color: white; border: 2px solid #d4af37; padding: 18px; font-size: 18px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 6px 15px rgba(255,0,0,0.4); text-shadow: 1px 1px 3px #000; letter-spacing:2px;">
                         🦅 一鍵秒複製 7 大欄位狂盟核心數據 🦅
                     </button>
