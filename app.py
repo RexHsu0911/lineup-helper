@@ -10,7 +10,7 @@ import time
 st.set_page_config(page_title="狂盟血盟後台系統", page_icon="🏰", layout="wide")
 
 # =====================================================================
-# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V22 版)
+# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V23 版)
 # =====================================================================
 st.markdown("""
     <style>
@@ -96,25 +96,33 @@ st.markdown("""
     label { 
         color: #d4af37 !important; 
         font-weight: bold !important; 
-        font-size: 15px !important;
+        font-size: 16px !important;
         letter-spacing: 1px;
         text-shadow: 1px 1px 2px #000;
+        margin-bottom: 8px !important;
     }
     
-    /* 🛠️ 核心修正：輸入框與下拉選單徹底隱藏直條游標 🛠️ */
-    input, select, div[data-baseweb="select"], div[data-baseweb="input"] {
+    /* 輸入框高階工程師黑鐵化與動態發光，且徹底移除小框框游標 */
+    input, select, div[data-baseweb="select"], div[data-baseweb="input"], .stSelectbox, .stDateInput {
         background-color: #111114 !important;
         color: #ffffff !important;
-        border: 1px solid #d4af37 !important;
         border-radius: 6px !important;
-        transition: all 0.3s ease-in-out !important;
-        caret-color: transparent !important; /* 🔥 徹底消滅游標小框框 */
+        transition: all 0.2s ease-in-out !important;
     }
     
-    /* 滑鼠移入輸入框爆發血光特效 */
-    input:focus, div[data-baseweb="select"]:focus, div[data-baseweb="input"]:focus-within {
+    /* 修正下拉選單與輸入框外框與隱藏閃爍游標 */
+    div[data-baseweb="select"] {
+        border: 1px solid #d4af37 !important;
+    }
+    input {
+        border: 1px solid #d4af37 !important;
+        caret-color: transparent !important; /* 徹底斬斷游標小框框 */
+    }
+    
+    /* 滑鼠移入輸入選單爆發烈焰紅光特效 */
+    div[data-baseweb="select"]:focus-within, div[data-baseweb="input"]:focus-within, input:focus {
         border-color: #ff0000 !important;
-        box-shadow: 0 0 12px rgba(255,0,0,0.6) !important;
+        box-shadow: 0 0 14px rgba(255,0,0,0.7) !important;
     }
     
     /* 客製化：上傳檔案區魔改 */
@@ -125,63 +133,93 @@ st.markdown("""
         padding: 15px;
     }
     
-    /* 💥 狂盟專屬雙核狂化按鈕控制台樣式 */
+    /* =====================================================================
+    /* 💥 狂盟尊爵：雙核心究極震撼按鈕控制台 (CSS Injection)
+    /* ===================================================================== */
+    /* 1. 地獄烈焰總攻擊按鈕 */
     div.stButton > button[key="attack_btn"] {
-        background: linear-gradient(180deg, #ff0000 0%, #880000 100%) !important;
+        background: linear-gradient(180deg, #ff0000 0%, #aa0000 50%, #660000 100%) !important;
         color: #ffffff !important;
         font-weight: 900 !important;
-        font-size: 20px !important;
-        border: 2px solid #d4af37 !important;
-        box-shadow: 0 0 18px rgba(255,0,0,0.6) !important;
-        text-shadow: 2px 2px 4px #000000 !important;
-        letter-spacing: 2px !important;
+        font-size: 22px !important;
+        border: 2px solid #ffcc00 !important;
+        box-shadow: 0 0 20px rgba(255,0,0,0.7), inset 0 0 10px rgba(255,255,255,0.3) !important;
+        text-shadow: 2px 2px 5px #000000, 0 0 10px #ff0000 !important;
+        letter-spacing: 3px !important;
         transition: all 0.2s ease !important;
-        height: 60px !important;
-        border-radius: 6px !important;
+        height: 65px !important;
+        border-radius: 8px !important;
+        cursor: pointer !important;
     }
     div.stButton > button[key="attack_btn"]:hover {
-        background: linear-gradient(180deg, #ff3333 0%, #aa0000 100%) !important;
-        box-shadow: 0 0 28px rgba(255,0,0,0.95) !important;
-        transform: translateY(-2px);
+        background: linear-gradient(180deg, #ff3333 0%, #cc0000 50%, #880000 100%) !important;
+        box-shadow: 0 0 35px rgba(255,0,0,1), 0 0 15px #ffcc00 !important;
+        transform: scale(1.01) translateY(-2px);
+    }
+    div.stButton > button[key="attack_btn"]:active {
+        transform: scale(0.99) translateY(1px);
     }
     
+    /* 2. 鋼鐵殘骸熔爐重置按鈕 */
     div.stButton > button[key="reset_btn"] {
-        background: linear-gradient(180deg, #2a2a2e 0%, #141416 100%) !important;
+        background: linear-gradient(180deg, #333338 0%, #1c1c1f 50%, #0d0d0f 100%) !important;
         color: #d4af37 !important;
-        font-weight: bold !important;
-        font-size: 17px !important;
-        border: 1px solid #443615 !important;
-        text-shadow: 1px 1px 3px #000000 !important;
-        letter-spacing: 1px !important;
+        font-weight: 900 !important;
+        font-size: 18px !important;
+        border: 2px solid #554518 !important;
+        text-shadow: 2px 2px 3px #000000 !important;
+        letter-spacing: 2px !important;
         transition: all 0.2s ease !important;
-        height: 60px !important;
-        border-radius: 6px !important;
+        height: 65px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5) !important;
+        cursor: pointer !important;
     }
     div.stButton > button[key="reset_btn"]:hover {
-        background: linear-gradient(180deg, #3a3a42 0%, #1f1f23 100%) !important;
-        color: #ffcc00 !important;
+        background: linear-gradient(180deg, #44444a 0%, #29292e 50%, #16161a 100%) !important;
+        color: #ffffff !important;
         border-color: #d4af37 !important;
-        box-shadow: 0 0 15px rgba(212,175,55,0.3) !important;
+        box-shadow: 0 0 20px rgba(212,175,55,0.4) !important;
+        transform: scale(1.01) translateY(-2px);
     }
     
-    /* 專用 Excel 欄位對位引導盒 */
-    .excel-guideline-box {
-        background-color: #0a0a0d;
-        border: 1px solid #443615;
-        border-radius: 6px;
-        padding: 15px 25px;
-        margin-top: -12px;
+    /* 👑 頂級客製化：黑金鋼鐵戰術表格示意外觀 */
+    .clan-table-container {
+        margin-top: 5px;
         margin-bottom: 25px;
-        box-shadow: inset 0 0 10px #000;
+        border: 2px solid #d4af37;
+        border-radius: 6px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.6);
     }
-    .excel-guideline-item {
-        display: inline-block;
-        margin-right: 25px;
+    .clan-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #0c0c0e;
+        font-family: 'Microsoft JhengHei', sans-serif;
+        text-align: center;
+    }
+    .clan-table th {
+        background: linear-gradient(180deg, #222226 0%, #131317 100%);
+        color: #d4af37;
+        font-weight: bold;
         font-size: 14px;
-        font-family: 'Courier New', monospace;
+        padding: 12px;
+        border-bottom: 2px solid #d4af37;
+        border-right: 1px solid #33270c;
+        letter-spacing: 1px;
     }
-    .guideline-letter { color: #ffcc00; font-weight: bold; }
-    .guideline-text { color: #a0a0a0; }
+    .clan-table td {
+        color: #8c8c96;
+        font-size: 13px;
+        padding: 10px;
+        border-right: 1px solid #221a08;
+        background-color: #0e0e11;
+        font-weight: bold;
+    }
+    .clan-table th:last-child, .clan-table td:last-child {
+        border-right: none;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -199,7 +237,7 @@ if 'uploader_key' not in st.session_state:
 # =====================================================================
 st.markdown("""
     <div class='clan-header'>
-        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V22</div>
+        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V23</div>
         <div class='clan-subtitle'>COMMAND CENTER • FOR INTERNAL USE OF CLAN LEADERS ONLY</div>
     </div>
 """, unsafe_allow_html=True)
@@ -214,9 +252,9 @@ api_key = st.sidebar.text_input(
 if api_key:
     st.session_state.saved_api_key = api_key
 
-st.markdown("<div class='section-tag'>⚔️ 戰報參數設定儀表板</div>", unsafe_allow_html=True)
+st.markdown("<div class='section-tag'>⚔️ 戰報參數設定儀表板 (支援文字手動輸入快速搜尋)</div>", unsafe_allow_html=True)
 
-# 行動目標組合生成
+# 核心出團目標庫
 base_targets = ["四色", "飛龍", "伊佛", "蟻媽媽", "克特", "掃街", "打架"]
 all_combinations = []
 for r in range(1, len(base_targets) + 1):
@@ -228,18 +266,23 @@ all_combinations.insert(0, "飛龍+四色+伊佛")
 
 COMMANDER_LIST = ["齊", "什麼漾子", "筱駱駱", "夜駱駝", "大都督", "副盟主1", "副盟主2"]
 
+# 時間選項生成
+time_options = [f"{str(h).zfill(2)}00" for h in range(24)]
+
 col_date, col_time = st.columns(2)
 with col_date:
     selected_date = st.date_input("📅 戰役發動日期:", datetime.date(2026, 5, 17))
 with col_time:
-    time_options = [f"{str(h).zfill(2)}00" for h in range(24)]
-    selected_time = st.selectbox("⏰ 吹哨集結時間 (整點):", options=time_options, index=8)
+    # 🌟 換裝智慧型搜尋下拉選單，老大可以直接打字盲打盲選時間
+    selected_time = st.selectbox("⏰ 吹哨集結時間 (整點):", options=time_options, index=8, help="可直接輸入文字搜尋，如 0700")
 
 col_target, col_cmd = st.columns(2)
 with col_target:
-    selected_target = st.selectbox("🎯 征討核心目標:", options=all_combinations)
+    # 🌟 換裝智慧型搜尋下拉選單，老大可以直接手動輸入目標快速找到
+    selected_target = st.selectbox("🎯 征討核心目標:", options=all_combinations, help="可直接輸入文字搜尋，如 飛龍")
 with col_cmd:
-    selected_commander = st.selectbox("👑 戰場最高統帥指揮官:", options=COMMANDER_LIST, index=0)
+    # 🌟 換裝智慧型搜尋下拉選單，老大可以直接手動輸入名字快速找到指揮官
+    selected_commander = st.selectbox("👑 戰場最高統帥指揮官:", options=COMMANDER_LIST, index=0, help="可直接輸入文字搜尋，如 大都督")
 
 st.markdown("<br><div class='section-tag'>📸 戰場軍情影像熔爐</div>", unsafe_allow_html=True)
 
@@ -250,7 +293,6 @@ uploaded_files = st.file_uploader(
     key=f"uploader_{st.session_state.uploader_key}"
 )
 
-# 偵測圖片是否上傳完全與防呆
 is_uploading = False
 if uploaded_files:
     st.markdown("<b style='color:#3a86c8;'>🖼️ 戰場核心影像載入預覽：</b>", unsafe_allow_html=True)
@@ -265,7 +307,7 @@ if uploaded_files:
             st.image(img_preview, caption=f"軍情圖片 {idx+1}", use_container_width=True)
 
 # =====================================================================
-# 4. 操作控制台 (注入雙核心狂化按鈕 + 安全鎖防快取失效)
+# 4. 操作控制台 (注入雙核心究極震撼按鈕)
 # =====================================================================
 st.markdown("<br>", unsafe_allow_html=True)
 btn_col1, btn_col2 = st.columns(2)
@@ -273,7 +315,7 @@ btn_col1, btn_col2 = st.columns(2)
 with btn_col1:
     if is_uploading:
         st.markdown("""
-            <button style="width: 100%; background-color: #222; color: #ff0000; border: 1px solid #ff0000; padding: 12px; font-weight: bold; border-radius: 4px; cursor: not-allowed; animation: blinker 1.5s linear infinite; height:60px;">
+            <button style="width: 100%; background-color: #222; color: #ff0000; border: 1px solid #ff0000; padding: 12px; font-weight: bold; border-radius: 4px; cursor: not-allowed; animation: blinker 1.5s linear infinite; height:65px;">
                 ⏳ 戰術分隊影像校閱中...請稍後點火
             </button>
             <style>@keyframes blinker { 50% { opacity: 0.3; } }</style>
@@ -286,12 +328,12 @@ with btn_col2:
     if is_uploading:
         pass
     else:
-        if st.button("☠️ 熔爐冷卻重置 / 掃除戰場殘骸", key="reset_btn", use_container_width=True):
+        if st.button("🔄 熔爐重置 / 清理當前戰報準備下一場", key="reset_btn", use_container_width=True):
             st.session_state.uploader_key += 1
             st.rerun()
 
 # =====================================================================
-# 5. 鋼鐵律令提示詞 (針對圖片3與齊老大強化壓制)
+# 5. 鋼鐵律令提示詞 
 # =====================================================================
 PROMPT_TEMPLATE = """
 你現在是《天堂》遊戲的血盟行政秘書。這張圖片是隊伍名單截圖。
@@ -303,7 +345,7 @@ PROMPT_TEMPLATE = """
 【👑 紅色鋼鐵特級鐵律：隊長特別注意】
 小隊的第一個名字（最上方的名字）絕對是隊長。
 1. 本場指揮官「齊」如果出現在隊伍最上方，他是一個獨立的名字！他就是隊長！你絕對不准漏掉「齊」、不准跳過他，更不准用下面的隊員當隊長！
-2. 「什麼漾子」、「筱駱駱」、「齊」這三個人只要出現在小隊中，他們必然是他們那張圖的隊長，必須強制排在第一行。
+2. 「什麼漾子」、「筱駱駱」、「齊}這三個人只要出現在小隊中，他們必然是他們那張圖的隊長，必須強制排在第一行。
 3. 特別注意：如果這張圖是【戰術分隊 3】，特別看清楚有沒有單字「齊」，他可能被黃色皇冠圖標擋到，無論如何都必須認列！
 
 【🛡️ 鐵律：字體外觀注意】
@@ -329,7 +371,6 @@ if execute_click:
     if not api_key:
         st.error("⚠️ 老大！請先在左側邊欄鎖定您的 狂盟核心 API 金鑰！")
     elif uploaded_files:
-        # 🛡️ 安全機制：在點火瞬間強制休息 0.5 秒，確保快取與 Streamlit 影像緩衝流完全同步
         time.sleep(0.5)
         
         genai.configure(api_key=api_key)
@@ -370,7 +411,6 @@ if execute_click:
                     clean_line = line.replace("[LEADER]", "").replace("[MEMBER]", "").replace("•", "").strip()
                     name_only = clean_line.split("(")[0].strip()
                     
-                    # 👑 齊老大「不朽追蹤雷達」：只要行內有「齊」，不論前後有什麼皇冠，直接強制校正
                     if "齊" in clean_line:
                         name_only = "齊"
                     
@@ -405,16 +445,51 @@ if execute_click:
             st.markdown("<br><div class='section-tag'>📋 狂盟直貼 Excel 數據中心 (完美相容 7 大直欄)</div>", unsafe_allow_html=True)
             st.text_area("請直接對下方框內全選複製 (Ctrl+A → Ctrl+C)：", value=raw_text_report.strip(), height=250, key="copy_target")
             
-            # 欄位對位引導盒
+            # 🌟 老大交代：文字框正下方，增加黑金鋼鐵戰術表格示意圖 🌟
             st.markdown("""
-                <div class='excel-guideline-box'>
-                    <span class='excel-guideline-item'><span class='guideline-letter'>[欄位 A]</span> <span class='guideline-text'>序號</span></span>
-                    <span class='excel-guideline-item'><span class='guideline-letter'>[欄位 B]</span> <span class='guideline-text'>日期</span></span>
-                    <span class='excel-guideline-item'><span class='guideline-letter'>[欄位 C]</span> <span class='guideline-text'>時間</span></span>
-                    <span class='excel-guideline-item'><span class='guideline-letter'>[欄位 D]</span> <span class='guideline-text'>出團目標</span></span>
-                    <span class='excel-guideline-item'><span class='guideline-letter'>[欄位 E]</span> <span class='guideline-text'>指揮官</span></span>
-                    <span class='excel-guideline-item'><span class='guideline-letter'>[欄位 F]</span> <span class='guideline-text'>成員名單</span></span>
-                    <span class='excel-guideline-item'><span class='guideline-letter'>[欄位 G]</span> <span class='guideline-text'>職位</span></span>
+                <div class='clan-table-container'>
+                    <table class='clan-table'>
+                        <thead>
+                            <tr>
+                                <th>[ 欄位 A ]</th>
+                                <th>[ 欄位 B ]</th>
+                                <th>[ 欄位 C ]</th>
+                                <th>[ 欄位 D ]</th>
+                                <th>[ 欄位 E ]</th>
+                                <th>[ 欄位 F ]</th>
+                                <th>[ 欄位 G ]</th>
+                            </tr>
+                            <tr>
+                                <th>序號</th>
+                                <th>日期</th>
+                                <th>時間</th>
+                                <th>出團目標</th>
+                                <th>指揮官</th>
+                                <th>成員名單</th>
+                                <th>職位</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>20260517</td>
+                                <td>0800</td>
+                                <td>飛龍+四色+伊佛</td>
+                                <td>齊</td>
+                                <td>齊</td>
+                                <td>隊長</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>20260517</td>
+                                <td>0800</td>
+                                <td>飛龍+四色+伊佛</td>
+                                <td>齊</td>
+                                <td>跑皮達人</td>
+                                <td> </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             """, unsafe_allow_html=True)
             
