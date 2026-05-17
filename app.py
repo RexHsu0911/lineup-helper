@@ -11,7 +11,7 @@ if os.path.exists(html_path):
     with open(html_path, "r", encoding="utf-8") as f:
         html_code = f.read()
     
-    # 載入網頁組件並拉滿高度
-    st.components.v1.html(html_code, height=950, scroller=True)
+    # 【核心修正】：移除錯誤的 scroller=True，改用官方標準的 scrolling=True
+    st.components.v1.html(html_code, height=950, scrolling=True)
 else:
     st.error("找不到 index.html 檔案，請確認它與 app.py 在同一個資料夾內。")
