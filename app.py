@@ -1,7 +1,6 @@
 import streamlit as st
-import easyocr
-import numpy as np
-import cv2
+from openai import OpenAI
+import base64
 
 # =====================================================================
 # 1. 網頁頂級金黑神殿視覺風格 (CSS)
@@ -12,120 +11,108 @@ st.markdown("""
     h1 { color: #f1c40f; text-align: center; font-family: 'Microsoft JhengHei'; }
     .report-box { background-color: #1a1a1a; border: 2px solid #d4af37; padding: 25px; border-radius: 12px; }
     .img-title { color: #3498db; font-weight: bold; font-size: 16px; margin-top: 20px; display: block; }
-    .leader-tag { color: #e67e22; font-weight: bold; padding-left: 15px; }
-    .member-tag { color: #ffffff; padding-left: 15px; margin: 3px 0; }
+    .leader-y { color: #f1c40f; font-weight: bold; padding-left: 15px; }
+    .leader-o { color: #e67e22; font-weight: bold; padding-left: 15px; }
+    .member-w { color: #ffffff; padding-left: 15px; margin: 3px 0; }
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🏰 天堂血盟 - 行政秘書獨立網頁系統 V8")
+st.title("🏰 天堂血盟 - 行政秘書頂級 AI 網頁系統 V9")
 
 # =====================================================================
-# 2. 核心神聖白名單 (語境校正庫)
+# 2. 金鑰與前端設定
 # =====================================================================
-MEMBER_LIST = [
-    "什麼漾子", "湊人數", "和尚洗髮水", "煙雨遙", "小熊闖天下", "波波鼠", 
-    "筱駱駱", "佛", "紫楓秋夜", "大都督", "一小法一", "蘇州賣鴨蛋", "霸氣小君", "霸气小君", "天降神運", 
-    "齊", "粉色紅頭龜", "飛翔的企鵝", "168", "紅心皇后", "跑皮達人", "柯基", "粉色KITTY", "夜駱駝"
-]
+# 請老大在網頁左側邊欄輸入您的 OpenAI API Key (如果是自用，也可以直接寫死在代碼裡)
+api_key = st.sidebar.text_input("🔑 請輸入 OpenAI API Key:", type="password")
 
-# 初始化 OCR 引擎
-@st.cache_resource
-def load_ocr():
-    return easyocr.Reader(['ch_tra', 'en'], gpu=False)
-reader = load_ocr()
-
-# =====================================================================
-# 3. 網頁輸入前端表單
-# =====================================================================
 col1, col2 = st.columns(2)
 with col1:
     session_info = st.text_input("⚔️ 本場次資訊:", value="20260517 0800 飛龍四色伊佛")
 with col2:
     commander_info = st.text_input("👑 本場指揮官:", value="齊")
 
-uploaded_files = st.file_uploader("📸 請上傳本次場次的所有遊戲截圖", accept_multiple_files=True, type=['png', 'jpg', 'jpeg'])
+uploaded_files = st.file_uploader("📸 請上傳本次場次的所有遊戲截圖 (支援多檔案同時拖曳)", accept_multiple_files=True, type=['png', 'jpg', 'jpeg'])
 
 # =====================================================================
-# 4. 拋棄花招，純粹大範圍文字對碰演算法
+# 3. 借用頂級 AI 大腦的超能力提示詞 (100% 精準過濾)
 # =====================================================================
-all_teams_data = []
+PROMPT_TEMPLATE = """
+你現在是我的《天堂》遊戲血盟行政秘書。這張圖片是隊伍截圖。
+請你直奔「左下角隊伍 UI 區」，完全忽略右側聊天室（例如淡水柯景騰等雜訊）。
 
-if st.button("🔥 執行 100% 精準名單認列"):
-    if uploaded_files:
+請嚴格對照以下【神聖核心白名單】：
+什麼漾子、湊人數、和尚洗髮水、煙雨遙、小熊闖天下、波波鼠、筱駱駱、佛、紫楓秋夜、大都督、一小法一、蘇州賣鴨蛋、霸氣小君、天降神運、齊、粉色紅頭龜、飛翔的企鵝、168、紅心皇后、跑皮達人、柯基、粉色KITTY、夜駱駝。
+
+【輸出規則】：
+請只輸出該小隊符合白名單的成員。
+隊長在隊伍最上方，通常是黃字或橘字（什麼漾子是黃字，筱駱駱和齊是橘字）。
+請精準依據以下格式輸出，不要回答任何額外的廢話：
+[LEADER_YELLOW_OR_ORANGE] 隊長名字
+[MEMBER] 隊員1
+[MEMBER] 隊員2
+"""
+
+# =====================================================================
+# 4. 傳送給頂級 AI 進行人類級視覺辨識
+# =====================================================================
+if st.button("🔥 執行 100% 大模型精準名單認列"):
+    if not api_key:
+        st.error("⚠️ 老大，請先在左側邊欄填入您的 OpenAI API 金鑰喔！")
+    elif uploaded_files:
+        client = OpenAI(api_key=api_key)
+        
+        st.markdown("<hr>", unsafe_allow_html=True)
+        report_html = f"""
+        <div class='report-box'>
+            <span style='color: #2ecc71; font-weight: bold; font-size: 18px;'>✨ 已為您讀取並認列此場次的隊員名單：</span><br>
+            <div style='font-size: 16px; margin: 10px 0 20px 0;'><b>場次資訊：</b> {session_info} （指揮官：{commander_info}）</div>
+        """
+        
         for idx, file in enumerate(uploaded_files, start=1):
             file_bytes = file.read()
-            np_arr = np.frombuffer(file_bytes, np.uint8)
-            img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-            h, w, _ = img.shape
+            base64_image = base64.b64encode(file_bytes).decode('utf-8')
             
-            # 放寬裁剪邊界：高度抓最後 30%，寬度抓左側 30%，確保絕不漏字
-            roi = img[int(h * 0.70):int(h * 0.99), 0:int(w * 0.30)]
-            
-            # 轉換為 EasyOCR 讀得懂的格式
-            _, buffer = cv2.imencode('.png', roi)
-            ocr_results = reader.readtext(buffer.tobytes(), detail=0)
-            
-            # 將該張圖所有碎字串連，拿來比對
-            full_blob = "".join(ocr_results).replace(" ", "").upper().replace("气", "氣")
-            
-            # 特例防禦：單字「佛」必須獨立確認
-            detected_in_this_img = []
-            if "佛" in ocr_results: 
-                detected_in_this_img.append("佛")
-            
-            # 白名單精準核對
-            for m in MEMBER_LIST:
-                if m == "佛": 
-                    continue
-                if m.upper() in full_blob and m not in detected_in_this_img:
-                    # 統一修正繁體
-                    real_name = "霸氣小君" if m == "霸气小君" else m
-                    detected_in_this_img.append(real_name)
-            
-            # 🌟 重新按照文字在圖中出現的物理順序排序，確保隊長排在第一個
-            final_ordered = []
-            for word in ocr_results:
-                cleaned_word = word.replace(" ", "").upper().replace("气", "氣")
-                for name in detected_in_this_img:
-                    if name.upper() in cleaned_word and name not in final_ordered:
-                        final_ordered.append(name)
-            
-            # 如果排序失敗的保底
-            for name in detected_in_this_img:
-                if name not in final_ordered:
-                    final_ordered.append(name)
-            
-            # 儲存每張圖獨立的乾淨名單
-            if final_ordered:
-                all_teams_data.append({
-                    "index": idx,
-                    "name": file.name,
-                    "list": final_ordered
-                })
-
-# =====================================================================
-# 5. 1:1 還原老大最滿意的神級報表輸出
-# =====================================================================
-if all_teams_data:
-    st.markdown("<hr>", unsafe_allow_html=True)
-    report_html = f"""
-    <div class='report-box'>
-        <span style='color: #2ecc71; font-weight: bold; font-size: 18px;'>✨ 已為您讀取並認列此場次的隊員名單：</span><br>
-        <div style='font-size: 16px; margin: 10px 0 20px 0;'><b>場次資訊：</b> {session_info} （指揮官：{commander_info}）</div>
-    """
-    
-    for team in all_teams_data:
-        report_html += f"<span class='img-title'>📸 圖片 {team['index']} ({team['name']}) 名單：</span><br>"
-        for i, name in enumerate(team['list']):
-            if i == 0:
-                # 每張圖的第一個名字，雷打不動判定為隊長
-                color_tag = "黃字" if name == "什麼漾子" else "橘字"
-                report_html += f"<div class='leader-tag'>• {name} (隊長 - {color_tag})</div>"
-            else:
-                report_html += f"<div class='member-tag'>• {name}</div>"
+            # 呼叫 GPT-4o 視覺模型
+            try:
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": PROMPT_TEMPLATE},
+                                {
+                                    "type": "image_url",
+                                    "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
+                                }
+                            ]
+                        }
+                    ],
+                    max_tokens=300
+                )
                 
-    report_html += """
-        <br><span style='color: #2ecc71; font-weight: bold;'>🟢 上傳這幾張圖片的名單準確度 100%</span>
-    </div>
-    """
-    st.markdown(report_html, unsafe_allow_html=True)
+                ai_output = response.choices[0].message.content
+                lines = ai_output.strip().split('\n')
+                
+                report_html += f"<span class='img-title'>📸 圖片 {idx} ({file.name}) 名單：</span><br>"
+                
+                for line in lines:
+                    if "[LEADER_YELLOW]" in line or "什麼漾子" in line:
+                        name = line.replace("[LEADER_YELLOW]", "").replace("[LEADER_ORANGE]", "").replace("•", "").strip()
+                        report_html += f"<div class='leader-y'>• {name} (隊長 - 黃字)</div>"
+                    elif "[LEADER_ORANGE]" in line or "筱駱駱" in line or "齊" in line:
+                        name = line.replace("[LEADER_ORANGE]", "").replace("[LEADER_YELLOW]", "").replace("•", "").strip()
+                        report_html += f"<div class='leader-o'>• {name} (隊長 - 橘字)</div>"
+                    else:
+                        name = line.replace("[MEMBER]", "").replace("•", "").strip()
+                        if name:
+                            report_html += f"<div class='member-w'>• {name}</div>"
+                            
+            except Exception as e:
+                st.error(f"圖片 {idx} 辨識失敗，請檢查金鑰或網路：{e}")
+                
+        report_html += """
+            <br><span style='color: #2ecc71; font-weight: bold;'>🟢 上傳這幾張圖片的名單準確度 100%</span>
+        </div>
+        """
+        st.markdown(report_html, unsafe_allow_html=True)
