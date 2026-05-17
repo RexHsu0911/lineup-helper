@@ -18,23 +18,39 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🏰 天堂血盟 - 行政秘書免費 AI 網頁系統 V12")
+st.title("🏰 天堂血盟 - 行政秘書免費 AI 網頁系統 V13")
 
 # =====================================================================
-# 2. 金鑰與前端設定
+# 2. 初始化記憶庫 (確保按清除鍵時能完美恢復預設)
+# =====================================================================
+if 'session_val' not in st.session_state:
+    st.session_state.session_val = "20260517 0800 飛龍四色伊佛"
+if 'commander_val' not in st.session_state:
+    st.session_state.commander_val = "齊"
+if 'uploader_key' not in st.session_state:
+    st.session_state.uploader_key = 0
+
+# =====================================================================
+# 3. 金鑰與前端設定
 # =====================================================================
 api_key = st.sidebar.text_input("🔑 請輸入 Google Gemini API Key:", type="password")
 
 col1, col2 = st.columns(2)
 with col1:
-    session_info = st.text_input("⚔️ 本場次資訊:", value="20260517 0800 飛龍四色伊佛")
+    session_info = st.text_input("⚔️ 本場次資訊:", value=st.session_state.session_val)
 with col2:
-    commander_info = st.text_input("👑 本場指揮官:", value="齊")
+    commander_info = st.text_input("👑 本場指揮官:", value=st.session_state.commander_val)
 
-uploaded_files = st.file_uploader("📸 請上傳本次場次的所有遊戲截圖", accept_multiple_files=True, type=['png', 'jpg', 'jpeg'])
+# 使用 uploader_key 來控制上傳元件，重置時清空已上傳檔案
+uploaded_files = st.file_uploader(
+    "📸 請上傳本次場次的所有遊戲截圖", 
+    accept_multiple_files=True, 
+    type=['png', 'jpg', 'jpeg'],
+    key=f"uploader_{st.session_state.uploader_key}"
+)
 
 # =====================================================================
-# 3. 鋼鐵律令提示詞：強逼單字隊長現身、禁止擅自修改簡體字
+# 4. 鋼鐵律令提示詞
 # =====================================================================
 PROMPT_TEMPLATE = """
 你現在是《天堂》遊戲的血盟行政秘書。這張圖片是隊伍名單截圖。
@@ -58,7 +74,6 @@ PROMPT_TEMPLATE = """
 [MEMBER] 隊員2
 """
 
-# 全體大名單（包含繁簡雙版本防禦）
 VALID_NAMES = [
     "什麼漾子", "湊人數", "和尚洗髮水", "煙雨遙", "小熊闖天下", "波波鼠", 
     "筱駱駱", "佛", "紫楓秋夜", "大都督", "一小法一", "蘇州賣鴨蛋", "霸氣小君", "霸气小君", "天降神運", 
@@ -66,16 +81,31 @@ VALID_NAMES = [
 ]
 
 # =====================================================================
-# 4. 傳送給 Google Gemini 進行辨識
+# 5. 操作按鈕區（點擊認列 / 清除重置）
 # =====================================================================
-if st.button("🔥 執行 100% 免費大模型精準名單認列"):
+btn_col1, btn_col2 = st.columns(2)
+
+with btn_col1:
+    execute_click = st.button("🔥 執行 100% 免費大模型精準名單認列", use_container_width=True)
+
+with btn_col2:
+    # 🧹 老大要的清除鍵：一鍵恢復預設狀態！
+    if st.button("🔄 清除本場 / 恢復預設準備下一場", use_container_width=True):
+        st.session_state.session_val = "20260517 0800 飛龍四色伊佛"
+        st.session_state.commander_val = "齊"
+        st.session_state.uploader_key += 1  # 改變 key 會強迫上傳元件完全清空
+        st.rerun()
+
+# =====================================================================
+# 6. 核心處理與報告輸出
+# =====================================================================
+if execute_click:
     if not api_key:
         st.error("⚠️ 老大，請先在左側邊欄填入您的 Google API 金鑰喔！")
     elif uploaded_files:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-2.5-flash')
         
-        # 建立乾淨的純文字報告（移除原有的結尾行）
         raw_text_report = f"✨ 已為您讀取並認列此場次的隊員名單：\n場次資訊： {session_info} （指揮官：{commander_info}）\n\n"
         
         report_html = f"""
@@ -99,7 +129,6 @@ if st.button("🔥 執行 100% 免費大模型精準名單認列"):
                 member_idx = 1
                 
                 for line in lines:
-                    # 徹底移除所有模型可能帶出來的廢字
                     clean_line = line.replace("[LEADER]", "").replace("[MEMBER]", "").replace("•", "").strip()
                     name_only = clean_line.split("(")[0].strip()
                     
@@ -123,9 +152,20 @@ if st.button("🔥 執行 100% 免費大模型精準名單認列"):
                 
         report_html += "</div>"
         
-        # 1. 顯示精美網頁畫面
+        # 1. 渲染網頁精美結果
         st.markdown(report_html, unsafe_allow_html=True)
         
-        # 2. 顯示一鍵複製框（已完美剔除不需要的文字行）
+        # 2. 顯示純文字結果框
         st.markdown("<br>", unsafe_allow_html=True)
-        st.text_area("📋 下方為可複製的純文字結果（請點右下角按鈕複製）：", value=raw_text_report.strip(), height=250)
+        st.text_area("📋 下方為可複製的純文字結果：", value=raw_text_report.strip(), height=250, key="copy_target")
+        
+        # 3. 🌟 終極無敵一鍵複製按鈕（保證按得到、按了秒複製）
+        # 利用 JavaScript 寫死，大按鈕直接塞在文字框正下方，點了直接複製到剪貼簿！
+        escaped_text = raw_text_report.strip().replace("`", "\\`").replace("'", "\\'")
+        js_code = f"""
+        <button onclick="navigator.clipboard.writeText(`{escaped_text}`).then(() => alert('📋 報告老大：名單已成功複製到剪貼簿！'));" 
+        style="width: 100%; background-color: #16a085; color: white; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 10px;">
+            📋 點我一鍵複製全文字名單
+        </button>
+        """
+        st.components.v1.html(js_code, height=60)
