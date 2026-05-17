@@ -10,7 +10,7 @@ import time
 st.set_page_config(page_title="狂盟血盟後台系統", page_icon="🏰", layout="wide")
 
 # =====================================================================
-# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V25 版)
+# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V26 版)
 # =====================================================================
 st.markdown("""
     <style>
@@ -87,7 +87,7 @@ st.markdown("""
         padding-bottom: 6px;
     }
     
-    /* 👑 老大特別交代：隊長一律顯示為橘色高亮 */
+    /* 👑 隊長一律顯示為爆擊橘色 */
     .leader-orange { 
         color: #ff4500 !important; 
         font-weight: bold !important; 
@@ -108,7 +108,7 @@ st.markdown("""
         margin-bottom: 8px !important;
     }
     
-    /* 輸入框高階工程師黑鐵化與動態發光，且徹底移除小框框游標 */
+    /* 🛠️ 下拉選單與輸入框徹底移除游標小框框 🛠️ */
     input, select, div[data-baseweb="select"], div[data-baseweb="input"], .stSelectbox, .stDateInput {
         background-color: #111114 !important;
         color: #ffffff !important;
@@ -121,7 +121,7 @@ st.markdown("""
     }
     input {
         border: 1px solid #d4af37 !important;
-        caret-color: transparent !important;
+        caret-color: transparent !important; /* 強制關閉任何閃爍小框框 */
     }
     
     div[data-baseweb="select"]:focus-within, div[data-baseweb="input"]:focus-within, input:focus {
@@ -136,7 +136,7 @@ st.markdown("""
         padding: 15px;
     }
     
-    /* 💥 狂盟尊爵：雙核心究極震撼按鈕控制台 */
+    /* 💥 雙核心按鈕控制台樣式魔改 */
     div.stButton > button[key="attack_btn"] {
         background: linear-gradient(180deg, #ff0000 0%, #aa0000 50%, #660000 100%) !important;
         color: #ffffff !important;
@@ -223,7 +223,7 @@ if 'uploader_key' not in st.session_state:
 # =====================================================================
 st.markdown("""
     <div class='clan-header'>
-        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V25</div>
+        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V26</div>
         <div class='clan-subtitle'>COMMAND CENTER • FOR INTERNAL USE OF CLAN LEADERS ONLY</div>
     </div>
 """, unsafe_allow_html=True)
@@ -307,25 +307,22 @@ with btn_col2:
             st.rerun()
 
 # =====================================================================
-# 5. 🎯 100% 像素精準級鋼鐵律令提示詞 (徹底修正漏字問題)
+# 5. 🎯 100% 視覺特化核心提示詞
 # =====================================================================
 PROMPT_TEMPLATE = """
-你現在是《天堂》遊戲的頂級血盟行政秘書。你的任務是精準分析這張小隊截圖，不准有任何漏看！
-請你直奔圖片「左下角的隊伍 UI 區塊」，徹底忽略右側聊天室、世界頻道與地圖名稱等所有干擾雜訊。
+你現在是《天堂》遊戲的血盟行政秘書。請精準分析這張小隊截圖。
+請把所有焦點集中在「圖片左下角的藍色隊伍名單 UI 區塊」，完全忽略右邊聊天室等雜訊。
 
-請拿出放大鏡，將左下角隊伍 UI 的每一行文字與以下【神盛核心白名單】進行逐字核對：
+請拿出放大鏡，將左下角隊伍 UI 的每一行文字由上到下，逐字與以下【白名單】核對：
 什麼漾子、湊人數、和尚洗髮水、煙雨遙、小熊闖天下、波波鼠、筱駱駱、佛、紫楓秋夜、大都督、一小法一、蘇州賣鴨蛋、霸气小君、霸氣小君、天降神運、齊、粉色紅頭龜、飛翔的企鵝、168、紅心皇后、跑皮達人、柯基、粉色KITTY、夜駱駝。
 
 【👑 隊長階級精準判定鐵律】：
-1. 隊伍最上面第一行的名字，正前方一定會黏著一個黃金色的隊長皇冠（👑）圖標，或是特殊符號。
-2. 因為圖標干擾或字數太短（例如只有一個字的「齊」），這會導致字元邊緣模糊。不論它前方黏著什麼皇冠或符號，只要該行文字包含白名單中的字，就必須無條件擷取！
-3. 只要出現在最上面第一行的成員，他就是該分隊的「隊長」。
-
-【🛡️ 字體外觀規範】：
-必須原封不動輸出圖片中的簡繁體。如果是簡體的「霸气小君」，就必須輸出「霸气小君」，絕對不准擅自改成繁體！
+1. 隊伍最上面第一行的名字，正前方一定會黏著一個黃金色的隊長皇冠（👑）圖標。
+2. 因為圖標干擾或名字只有一個字（例如單字「齊」），這會導致字元邊緣被皇冠切到。請特別注意：不論它前後夾帶什麼符號或空格，只要包含白名單的名字，就必須精準擷取！
+3. 請確保排在最上方第一行的那個人，不論他是誰，他就是該分隊的「隊長」。
 
 【精準輸出格式】：
-請只輸出以下標籤格式，名字後面是隊長的就加上 (隊長)，不要夾帶任何說明廢話：
+不要回答任何說明廢話，只輸出以下格式：
 [LEADER] 隊長名字
 [MEMBER] 隊員1
 [MEMBER] 隊員2
@@ -352,16 +349,16 @@ if execute_click:
         date_str = selected_date.strftime("%Y%m%d")
         raw_text_report = ""
         
-        # 🌟 老大交代：最前方的 • 符號已全部拿掉，畫面極致乾淨 🌟
+        # 🌟 老大指令：最前方的 • 符號已全部斬斷，畫面極致乾淨 🌟
         report_html = f"""
         <div class='report-box'>
             <div class='section-tag' style='background:none; border:none; padding:0; color:#ff0000; font-size:20px;'>🦅 狂盟點名大會師 - 成果報告庫</div>
             <div style='font-size: 15px; margin: 15px 0 25px 0; line-height:1.6; border-bottom: 1px solid #443615; padding-bottom: 15px;'>
                 <b style='color: #d4af37; font-size:16px;'>【本次戰報核心資訊】</b><br>
-                ⚔️ 征戰日期: <span style='color:#fff; font-weight:bold;'>{date_str}</span><br>
-                ⏰ 出兵時間: <span style='color:#fff; font-weight:bold;'>{selected_time}</span><br>
-                🎯 戰術目標: <span style='color:#ffcc00; font-weight:bold;'>{selected_target}</span><br>
-                👑 統帥指揮: <span style='color:#ff0000; font-weight:bold;'>{selected_commander}</span>
+                戰役日期: <span style='color:#fff; font-weight:bold;'>{date_str}</span><br>
+                吹哨時間: <span style='color:#fff; font-weight:bold;'>{selected_time}</span><br>
+                征討目標: <span style='color:#ffcc00; font-weight:bold;'>{selected_target}</span><br>
+                最高統帥: <span style='color:#ff0000; font-weight:bold;'>{selected_commander}</span>
             </div>
         """
         
@@ -382,12 +379,10 @@ if execute_click:
                 local_team_idx = 1 
                 
                 for line in lines:
-                    clean_line = line.replace("[LEADER]", "").replace("[MEMBER]", "").replace("•", "").strip()
-                    
-                    # 🛡️ 為了對付單字「齊」在像素辨識時黏著符號的問題，採用子字串包含比對
+                    # 🌟 核心升級：全面採用「子字串包含比對」防止空格與雜訊造成比對失敗 🌟
                     matched_name = None
                     for v_name in VALID_NAMES:
-                        if v_name in clean_line:
+                        if v_name in line:  # 只要該行包含白名單名字
                             matched_name = v_name
                             break
                     
@@ -395,11 +390,11 @@ if execute_click:
                         has_any_data = True
                         excel_row_base = f"{global_excel_idx}\t{date_str}\t{selected_time}\t{selected_target}\t{selected_commander}\t{matched_name}"
                         
-                        # 判定是否為隊長
-                        is_leader = "[LEADER]" in line or "(隊長)" in clean_line or matched_name in ["什麼漾子", "筱駱駱"] or (local_team_idx == 1 and "齊" in clean_line)
+                        # 只要是該小隊分析出來的第一行，或者是大模型標註的 LEADER，一律認定為隊長
+                        is_leader = "[LEADER]" in line or "(隊長)" in line or local_team_idx == 1
                         
                         if is_leader:
-                            # 🌟 老大指令：隊長一律顯示為橘色高亮 🌟
+                            # 🌟 老大指令：隊長一律顯示為橘色高亮 (#ff4500) 🌟
                             report_html += f"<div class='leader-orange'>{local_team_idx}. 🎖️ {matched_name} (隊長)</div>"
                             raw_text_report += f"{excel_row_base}\t隊長\n"
                         else:
