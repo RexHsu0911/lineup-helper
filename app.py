@@ -10,7 +10,7 @@ import time
 st.set_page_config(page_title="狂盟血盟後台系統", page_icon="🏰", layout="wide")
 
 # =====================================================================
-# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V26 版)
+# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V27 版)
 # =====================================================================
 st.markdown("""
     <style>
@@ -108,7 +108,7 @@ st.markdown("""
         margin-bottom: 8px !important;
     }
     
-    /* 🛠️ 下拉選單與輸入框徹底移除游標小框框 🛠️ */
+    /* 下拉選單與輸入框徹底移除游標小框框 */
     input, select, div[data-baseweb="select"], div[data-baseweb="input"], .stSelectbox, .stDateInput {
         background-color: #111114 !important;
         color: #ffffff !important;
@@ -121,7 +121,7 @@ st.markdown("""
     }
     input {
         border: 1px solid #d4af37 !important;
-        caret-color: transparent !important; /* 強制關閉任何閃爍小框框 */
+        caret-color: transparent !important;
     }
     
     div[data-baseweb="select"]:focus-within, div[data-baseweb="input"]:focus-within, input:focus {
@@ -136,7 +136,7 @@ st.markdown("""
         padding: 15px;
     }
     
-    /* 💥 雙核心按鈕控制台樣式魔改 */
+    /* 💥 雙核心按鈕控制台 */
     div.stButton > button[key="attack_btn"] {
         background: linear-gradient(180deg, #ff0000 0%, #aa0000 50%, #660000 100%) !important;
         color: #ffffff !important;
@@ -223,7 +223,7 @@ if 'uploader_key' not in st.session_state:
 # =====================================================================
 st.markdown("""
     <div class='clan-header'>
-        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V26</div>
+        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V27</div>
         <div class='clan-subtitle'>COMMAND CENTER • FOR INTERNAL USE OF CLAN LEADERS ONLY</div>
     </div>
 """, unsafe_allow_html=True)
@@ -281,7 +281,7 @@ if uploaded_files:
             st.image(img_preview, caption=f"軍情圖片 {idx+1}", use_container_width=True)
 
 # =====================================================================
-# 4. 操作控制台 (雙核心究極震撼按鈕)
+# 4. 操作控制台
 # =====================================================================
 st.markdown("<br>", unsafe_allow_html=True)
 btn_col1, btn_col2 = st.columns(2)
@@ -307,25 +307,24 @@ with btn_col2:
             st.rerun()
 
 # =====================================================================
-# 5. 🎯 100% 視覺特化核心提示詞
+# 5. 🎯 狂盟大破大立不漏字核心提示詞
 # =====================================================================
 PROMPT_TEMPLATE = """
-你現在是《天堂》遊戲的血盟行政秘書。請精準分析這張小隊截圖。
-請把所有焦點集中在「圖片左下角的藍色隊伍名單 UI 區塊」，完全忽略右邊聊天室等雜訊。
+你現在是《天堂》遊戲血盟的頂級行政秘書。請對這張圖片左下角的「藍色小隊名單 UI 區塊」進行地毯式掃描。
+必須找出名單中的每一個人，絕對不准有任何遺漏！
 
-請拿出放大鏡，將左下角隊伍 UI 的每一行文字由上到下，逐字與以下【白名單】核對：
+請逐字核對以下【狂盟官方白名單】：
 什麼漾子、湊人數、和尚洗髮水、煙雨遙、小熊闖天下、波波鼠、筱駱駱、佛、紫楓秋夜、大都督、一小法一、蘇州賣鴨蛋、霸气小君、霸氣小君、天降神運、齊、粉色紅頭龜、飛翔的企鵝、168、紅心皇后、跑皮達人、柯基、粉色KITTY、夜駱駝。
 
-【👑 隊長階級精準判定鐵律】：
-1. 隊伍最上面第一行的名字，正前方一定會黏著一個黃金色的隊長皇冠（👑）圖標。
-2. 因為圖標干擾或名字只有一個字（例如單字「齊」），這會導致字元邊緣被皇冠切到。請特別注意：不論它前後夾帶什麼符號或空格，只要包含白名單的名字，就必須精準擷取！
-3. 請確保排在最上方第一行的那個人，不論他是誰，他就是該分隊的「隊長」。
+【👑 特級鐵律：隊長與名單分離】
+1. 隊伍最上面第一行（正前方帶有黃金皇冠圖標）的名字是「隊長」。如果最上面看到的是單字「齊」，請確認他是獨立的一行，他就是隊長！絕對不准漏掉他，也不准把他和下方的隊員合在一起！
+2. 請由上到下，精準輸出小隊中所有符合白名單的名字。每行一個名字。
 
 【精準輸出格式】：
-不要回答任何說明廢話，只輸出以下格式：
+不准輸出任何額外廢話，嚴格依據以下格式回傳：
 [LEADER] 隊長名字
-[MEMBER] 隊員1
-[MEMBER] 隊員2
+[MEMBER] 隊員名字
+[MEMBER] 隊員名字
 """
 
 VALID_NAMES = [
@@ -349,7 +348,6 @@ if execute_click:
         date_str = selected_date.strftime("%Y%m%d")
         raw_text_report = ""
         
-        # 🌟 老大指令：最前方的 • 符號已全部斬斷，畫面極致乾淨 🌟
         report_html = f"""
         <div class='report-box'>
             <div class='section-tag' style='background:none; border:none; padding:0; color:#ff0000; font-size:20px;'>🦅 狂盟點名大會師 - 成果報告庫</div>
@@ -379,22 +377,24 @@ if execute_click:
                 local_team_idx = 1 
                 
                 for line in lines:
-                    # 🌟 核心升級：全面採用「子字串包含比對」防止空格與雜訊造成比對失敗 🌟
+                    cleaned = line.replace("[LEADER]", "").replace("[MEMBER]", "").replace("(隊長)", "").strip()
+                    
+                    # 🌟 徹底捨棄會造成誤判與漏字的 break 邏輯，改用精準字串清理比對 🌟
                     matched_name = None
                     for v_name in VALID_NAMES:
-                        if v_name in line:  # 只要該行包含白名單名字
+                        # 移除字串中可能存在的所有空格，進行完全等值或乾淨的包含比對
+                        if v_name in cleaned.replace(" ", ""):
                             matched_name = v_name
-                            break
+                            break # 此處 break 僅跳出白名單比對，不影響下一行 line 處理
                     
                     if matched_name:
                         has_any_data = True
                         excel_row_base = f"{global_excel_idx}\t{date_str}\t{selected_time}\t{selected_target}\t{selected_commander}\t{matched_name}"
                         
-                        # 只要是該小隊分析出來的第一行，或者是大模型標註的 LEADER，一律認定為隊長
-                        is_leader = "[LEADER]" in line or "(隊長)" in line or local_team_idx == 1
+                        # 只要是該小隊處理出的第一個成員，或者是AI標記為LEADER，就是隊長
+                        is_leader = "[LEADER]" in line or "隊長" in line or local_team_idx == 1
                         
                         if is_leader:
-                            # 🌟 老大指令：隊長一律顯示為橘色高亮 (#ff4500) 🌟
                             report_html += f"<div class='leader-orange'>{local_team_idx}. 🎖️ {matched_name} (隊長)</div>"
                             raw_text_report += f"{excel_row_base}\t隊長\n"
                         else:
@@ -412,8 +412,6 @@ if execute_click:
         
         if has_any_data:
             st.markdown("<br><div class='section-tag'>📋 狂盟直貼 Excel 數據中心 (完美相容 7 大直欄)</div>", unsafe_allow_html=True)
-            
-            # 🌟 老大指定排版：提示語 -> 黑金示意表格 -> 數據框 🌟
             st.markdown("<b style='color:#ffffff; font-size:15px;'>請直接對下方框內全選複製 (Ctrl+A → Ctrl+C)：</b>", unsafe_allow_html=True)
             
             # 簡約風黑金戰術欄位示意表格
