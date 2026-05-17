@@ -5,165 +5,198 @@ import io
 import datetime
 import itertools
 
+# 配置網頁分頁標題與圖示（讓瀏覽器分頁也充滿狂盟霸氣）
+st.set_page_config(page_title="狂盟血盟後台系統", page_icon="🏰", layout="wide")
+
 # =====================================================================
-# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改版)
+# 1. 頂級工程師操刀：狂盟網頁視覺殿堂 (CSS 究極外觀魔改)
 # =====================================================================
 st.markdown("""
     <style>
-    /* 全局戰場黑背景 */
+    /* 全局戰場迷霧深黑 */
     .main { 
-        background-color: #0a0a0b; 
-        color: #e6e6e6; 
+        background-color: #08080a; 
+        color: #e0e0e0; 
         font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif; 
     }
     
-    /* 側邊欄黑鐵化 */
+    /* 側邊欄高端鐵冷色 */
     [data-testid="stSidebar"] {
-        background-color: #111113 !important;
-        border-right: 1px solid #443615;
+        background-color: #0c0c0e !important;
+        border-right: 2px solid #8c7323;
     }
     
-    /* 狂盟烈焰血紅大標題 */
+    /* 標題區：狂盟血誓神殿大門 */
+    .clan-header {
+        background: linear-gradient(90deg, rgba(179,0,0,0.2) 0%, rgba(0,0,0,0.8) 50%, rgba(179,0,0,0.2) 100%);
+        border: 2px solid #9a7b2c;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 30px;
+        box-shadow: 0 0 20px rgba(179,0,0,0.4);
+    }
     .clan-title { 
-        color: #b30000; 
-        text-align: center; 
+        color: #ff0000; 
         font-weight: 900; 
-        font-size: 32px;
-        text-shadow: 3px 3px 6px #000000, 0 0 15px #b30000; 
-        letter-spacing: 3px;
-        padding: 10px 0;
-        border-bottom: 2px dashed #b30000;
-        margin-bottom: 25px;
+        font-size: 36px;
+        text-shadow: 3px 3px 5px #000000, 0 0 25px #ff0000; 
+        letter-spacing: 4px;
+        margin: 0;
     }
-    
-    /* 皇家暗金不朽邊框報告箱 */
-    .report-box { 
-        background-color: #121215; 
-        border: 2px solid #9a7b2c; 
-        padding: 25px; 
-        border-radius: 6px; 
-        box-shadow: 0 5px 15px rgba(0,0,0,0.8), inset 0 0 15px rgba(0,0,0,0.6); 
-    }
-    
-    /* 資訊小標題 */
-    .info-title {
+    .clan-subtitle {
         color: #9a7b2c;
-        font-size: 16px;
+        font-size: 14px;
+        letter-spacing: 2px;
+        margin-top: 5px;
         font-weight: bold;
-        border-left: 4px solid #b30000;
-        padding-left: 8px;
-        margin-bottom: 15px;
     }
     
-    /* 圖片小隊標題藍 */
+    /* 頂級客製化：戰術輸入控制面板 */
+    div[data-testid="stVerticalBlock"] > div {
+        border-radius: 6px;
+    }
+    
+    /* 皇家暗金立體報告箱 */
+    .report-box { 
+        background: linear-gradient(145deg, #111114, #16161b);
+        border: 2px solid #9a7b2c; 
+        padding: 30px; 
+        border-radius: 8px; 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.9), 0 0 15px rgba(154,123,44,0.2);
+    }
+    
+    /* 區塊核心發光標題 */
+    .section-tag {
+        color: #ffffff;
+        font-size: 18px;
+        font-weight: bold;
+        background: linear-gradient(90deg, #b30000 0%, transparent 100%);
+        padding: 6px 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        border-left: 5px solid #ff0000;
+        text-shadow: 1px 1px 2px #000;
+    }
+    
+    /* 圖片分隊卡片 */
     .img-title { 
-        color: #3a86c8; 
+        color: #ffcc00; 
         font-weight: bold; 
         font-size: 16px; 
         margin-top: 25px; 
-        display: block; 
-        text-shadow: 1px 1px 2px #000;
+        display: block;
+        border-bottom: 1px solid #443615;
+        padding-bottom: 5px;
     }
     
-    /* 狂盟主力隊長黃金字 */
-    .leader-y { 
-        color: #ffcc00; 
-        font-weight: bold; 
-        padding-left: 15px; 
-        font-size: 16px; 
-        text-shadow: 1px 1px 2px #000;
-        margin: 5px 0;
-    }
+    /* 隊長與隊員字體升級 */
+    .leader-y { color: #ff9900; font-weight: bold; padding-left: 20px; font-size: 16px; margin: 6px 0; text-shadow: 1px 1px 3px #000; }
+    .leader-o { color: #ff5500; font-weight: bold; padding-left: 20px; font-size: 16px; margin: 6px 0; text-shadow: 1px 1px 3px #000; }
+    .member-w { color: #e0e0e0; padding-left: 20px; margin: 5px 0; font-size: 15px; }
     
-    /* 狂盟突擊隊長烈橘字 */
-    .leader-o { 
-        color: #e66b00; 
-        font-weight: bold; 
-        padding-left: 15px; 
-        font-size: 16px; 
-        text-shadow: 1px 1px 2px #000;
-        margin: 5px 0;
-    }
-    
-    /* 狂盟鋼鐵戰員象牙白字 */
-    .member-w { 
-        color: #dfdfdf; 
-        padding-left: 15px; 
-        margin: 4px 0; 
-        font-size: 15px; 
-    }
-    
-    /* 強制修改 Streamlit 內建標籤顏色為暗金 */
+    /* 修改所有預設 Label 顏色為暗金 */
     label { 
         color: #9a7b2c !important; 
         font-weight: bold !important; 
-        font-size: 14px !important;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
     
-    /* 輸入框黑框化 */
-    input, select, div[data-baseweb="select"] {
-        background-color: #16161a !important;
+    /* 輸入框高階工程師黑鐵化與動態發光 */
+    input, select, div[data-baseweb="select"], div[data-baseweb="input"] {
+        background-color: #121215 !important;
         color: #ffffff !important;
-        border: 1px solid #443615 !important;
+        border: 1px solid #9a7b2c !important;
+        border-radius: 4px !important;
+    }
+    input:focus, div[data-baseweb="select"]:focus {
+        border-color: #ff0000 !important;
+        box-shadow: 0 0 10px rgba(255,0,0,0.5) !important;
+    }
+    
+    /* 覆魔客製化：上傳檔案區 */
+    div[data-testid="stFileUploader"] {
+        background-color: #0f0f12;
+        border: 2px dashed #b30000 !important;
+        border-radius: 8px;
+        padding: 10px;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# 狂盟專屬血契大標題
-st.markdown("<div class='clan-title'>🏰 狂盟戰盟 - 行政秘書免費 AI 點名系統 V18</div>", unsafe_allow_html=True)
+# =====================================================================
+# 2. 核心機制：金鑰自動記憶功能 (Session State 機制)
+# =====================================================================
+if 'saved_api_key' not in st.session_state:
+    st.session_state.saved_api_key = ""
+
+if 'uploader_key' not in st.session_state:
+    st.session_state.uploader_key = 0
 
 # =====================================================================
-# 2. 自動生成所有出團目標的排列組合
+# 3. 狂盟大門 - 戰略操作介面
 # =====================================================================
+st.markdown("""
+    <div class='clan-header'>
+        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V19</div>
+        <div class='clan-subtitle'>COMMAND CENTER • FOR INTERNAL USE OF CLAN LEADERS ONLY</div>
+    </div>
+""", unsafe_allow_html=True)
+
+# 🔑 左側金鑰輸入（加裝自動記憶體）
+api_key = st.sidebar.text_input(
+    "🔑 狂盟核心 API 認證金鑰：", 
+    value=st.session_state.saved_api_key, 
+    type="password",
+    help="輸入一次後系統將自動鎖定記憶，無須重複輸入。"
+)
+
+# 當使用者輸入時，即時更新記憶庫
+if api_key:
+    st.session_state.saved_api_key = api_key
+
+# ⚔️ 戰報參數設定區
+st.markdown("<div class='section-tag'>⚔️ 戰報參數設定儀表板</div>", unsafe_allow_html=True)
+
+# 行動目標組合生成
 base_targets = ["四色", "飛龍", "伊佛", "蟻媽媽", "克特", "掃街", "打架"]
 all_combinations = []
 for r in range(1, len(base_targets) + 1):
     for combo in itertools.combinations(base_targets, r):
         all_combinations.append("+".join(combo))
-
 if "飛龍+四色+伊佛" in all_combinations:
     all_combinations.remove("飛龍+四色+伊佛")
 all_combinations.insert(0, "飛龍+四色+伊佛")
 
 COMMANDER_LIST = ["齊", "什麼漾子", "筱駱駱", "夜駱駝", "大都督", "副盟主1", "副盟主2"]
 
-if 'uploader_key' not in st.session_state:
-    st.session_state.uploader_key = 0
-
-# =====================================================================
-# 3. 前端選單輸入區
-# =====================================================================
-api_key = st.sidebar.text_input("🔑 輸入 Google Gemini API Key:", type="password")
-
-st.markdown("<div class='info-title'>⚔️ 狂盟參戰戰報設定</div>", unsafe_allow_html=True)
-
 col_date, col_time = st.columns(2)
 with col_date:
-    selected_date = st.date_input("📅 選擇作戰日期:", datetime.date(2026, 5, 17))
+    selected_date = st.date_input("📅 戰役發動日期:", datetime.date(2026, 5, 17))
 with col_time:
     time_options = [f"{str(h).zfill(2)}00" for h in range(24)]
-    selected_time = st.selectbox("⏰ 選擇出兵時間 (整點):", options=time_options, index=8)
+    selected_time = st.selectbox("⏰ 吹哨集結時間 (整點):", options=time_options, index=8)
 
 col_target, col_cmd = st.columns(2)
 with col_target:
-    selected_target = st.selectbox("🎯 鎖定出團目標:", options=all_combinations)
+    selected_target = st.selectbox("🎯 征討核心目標:", options=all_combinations)
 with col_cmd:
-    selected_commander = st.selectbox("👑 當場統帥指揮官:", options=COMMANDER_LIST, index=0)
+    selected_commander = st.selectbox("👑 戰場最高統帥指揮官:", options=COMMANDER_LIST, index=0)
 
-st.markdown("<hr style='border:0.5px solid #332707;'>", unsafe_allow_html=True)
+st.markdown("<br><div class='section-tag'>📸 戰場軍情影像熔爐</div>", unsafe_allow_html=True)
 
-# 上傳元件
 uploaded_files = st.file_uploader(
-    "📸 請拖曳或上傳戰場隊伍截圖 (可多選)", 
+    "請將本次戰役的所有小隊截圖拖曳至此，系統將啟動多線程軍情掃描：", 
     accept_multiple_files=True, 
     type=['png', 'jpg', 'jpeg'],
     key=f"uploader_{st.session_state.uploader_key}"
 )
 
-# 🔒 安全防呆鎖邏輯
+# 🔒 檔案加載防呆安全鎖
 is_uploading = False
 if uploaded_files:
-    st.markdown("<b style='color:#3a86c8;'>🖼️ 戰場截圖預覽 (確認無誤後再點火執行)：</b>", unsafe_allow_html=True)
+    st.markdown("<b style='color:#3a86c8;'>🖼️ 戰場核心影像載入預覽：</b>", unsafe_allow_html=True)
     cols = st.columns(min(len(uploaded_files), 4))
     for idx, file in enumerate(uploaded_files):
         with cols[idx % 4]:
@@ -172,27 +205,32 @@ if uploaded_files:
             if len(file_bytes) == 0:
                 is_uploading = True
             img_preview = Image.open(io.BytesIO(file_bytes))
-            st.image(img_preview, caption=f"截圖 {idx+1}", use_container_width=True)
+            st.image(img_preview, caption=f"軍情圖片 {idx+1}", use_container_width=True)
 
 # =====================================================================
-# 4. 操作按鈕功能區 (防呆按鈕鎖死機制)
+# 4. 高階操作控制台 (防呆按鈕鎖)
 # =====================================================================
 st.markdown("<br>", unsafe_allow_html=True)
 btn_col1, btn_col2 = st.columns(2)
 
 with btn_col1:
     if is_uploading:
-        st.button("⏳ 戰場影像讀取中，冷卻中...", disabled=True, use_container_width=True)
+        st.markdown("""
+            <button style="width: 100%; background-color: #222; color: #ff0000; border: 1px solid #ff0000; padding: 12px; font-weight: bold; border-radius: 4px; cursor: not-allowed; animation: blinker 1.5s linear infinite;">
+                ⏳ 軍情影像傳輸中...控制台暫時鎖定
+            </button>
+            <style>@keyframes blinker { 50% { opacity: 0.3; } }</style>
+        """, unsafe_allow_html=True)
         execute_click = False
     else:
-        # 使用自定義風格按鈕 (紅色點火)
-        execute_click = st.button("🔥 點火！發動 AI 陣營精準名單審查", use_container_width=True)
+        execute_click = st.button("🔥 發動總攻擊！啟動狂盟核心點名認列", use_container_width=True)
 
 with btn_col2:
     if is_uploading:
-        st.button("🔄 熔爐清理鎖定中", disabled=True, use_container_width=True)
+        # 鎖定狀態
+        pass
     else:
-        if st.button("🔄 戰報重置 / 準備下一場戰役", use_container_width=True):
+        if st.button("🔄 熔爐重置 / 清理當前戰報準備下一場", use_container_width=True):
             st.session_state.uploader_key += 1
             st.rerun()
 
@@ -232,7 +270,7 @@ VALID_NAMES = [
 # =====================================================================
 if execute_click:
     if not api_key:
-        st.error("⚠️ 老大，請先在左側邊欄填入您的 Google API 金鑰喔！")
+        st.error("⚠️ 老大！請先在左側邊欄鎖定您的 狂盟核心 API 金鑰！")
     elif uploaded_files:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-2.5-flash')
@@ -240,16 +278,15 @@ if execute_click:
         date_str = selected_date.strftime("%Y%m%d")
         raw_text_report = ""
         
-        # 網頁端狂盟殿堂排版
         report_html = f"""
         <div class='report-box'>
-            <span style='color: #b30000; font-weight: bold; font-size: 18px;'>✨ 狂盟出征 - 隊員名單審查完畢：</span><br>
-            <div style='font-size: 15px; margin: 12px 0 25px 0; line-height:1.6; border-bottom: 1px solid #443615; padding-bottom: 10px;'>
-                <b style='color: #9a7b2c;'>【戰役基本資訊】</b><br>
-                • ⚔️ 作戰日期: {date_str}<br>
-                • ⏰ 出兵時間: {selected_time}<br>
-                • 🎯 戰術目標: {selected_target}<br>
-                • 👑 戰場統帥: {selected_commander}
+            <div class='section-tag' style='background:none; border:none; padding:0; color:#ff0000; font-size:20px;'>🦅 狂盟點名大會師 - 成果報告庫</div>
+            <div style='font-size: 15px; margin: 15px 0 25px 0; line-height:1.6; border-bottom: 1px solid #443615; padding-bottom: 15px;'>
+                <b style='color: #9a7b2c; font-size:16px;'>【本次戰報核心資訊】</b><br>
+                • ⚔️ 征戰日期: <span style='color:#fff; font-weight:bold;'>{date_str}</span><br>
+                • ⏰ 出兵時間: <span style='color:#fff; font-weight:bold;'>{selected_time}</span><br>
+                • 🎯 戰術目標: <span style='color:#ffcc00; font-weight:bold;'>{selected_target}</span><br>
+                • 👑 統帥指揮: <span style='color:#ff0000; font-weight:bold;'>{selected_commander}</span>
             </div>
         """
         
@@ -273,7 +310,6 @@ if execute_click:
                     clean_line = line.replace("[LEADER]", "").replace("[MEMBER]", "").replace("•", "").strip()
                     name_only = clean_line.split("(")[0].strip()
                     
-                    # 👑 齊老大核心特赦鎖（杜絕漏人）
                     if "齊" in clean_line and name_only not in VALID_NAMES:
                         name_only = "齊"
                     
@@ -283,9 +319,9 @@ if execute_click:
                         
                         if name_only in ["什麼漾子", "筱駱駱", "齊"] or "(隊長)" in clean_line or "[LEADER]" in line:
                             if name_only == "什麼漾子":
-                                report_html += f"<div class='leader-y'>{local_team_idx}. ⚔️ {name_only} (隊長)</div>"
+                                report_html += f"<div class='leader-y'>{local_team_idx}. 🎖️ {name_only} (隊長)</div>"
                             else:
-                                report_html += f"<div class='leader-o'>{local_team_idx}. ⚔️ {name_only} (隊長)</div>"
+                                report_html += f"<div class='leader-o'>{local_team_idx}. 🎖️ {name_only} (隊長)</div>"
                             raw_text_report += f"{excel_row_base}\t隊長\n"
                         else:
                             report_html += f"<div class='member-w'>{local_team_idx}. {name_only}</div>"
@@ -296,29 +332,25 @@ if execute_click:
                         
             except Exception as e:
                 if "429" in str(e) or "quota" in str(e).lower():
-                    st.error(f"❌ 限制：當前 Google 金鑰免費額度乾涸！請至左側欄換上預備金鑰。")
+                    st.error(f"❌ 警告：今日 Google 免費額度耗盡！請至左側更換新的金鑰。")
                 else:
-                    st.error(f"❌ 戰場影像 {idx} 讀取挫敗：{e}")
+                    st.error(f"❌ 軍情影像 {idx} 掃描失敗：{e}")
                 
         report_html += "</div>"
         
-        # 渲染狂盟殿堂報告
         st.markdown(report_html, unsafe_allow_html=True)
         
-        # 只要有數據，就強制解鎖釋放數據框
         if has_any_data:
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.text_area("📋 狂盟專用 Excel 數據分流（複製此處直貼 A1）：", value=raw_text_report.strip(), height=250, key="copy_target")
+            st.markdown("<br><div class='section-tag'>📋 狂盟直貼 Excel 數據中心 (完美相容 7 大直欄)</div>", unsafe_allow_html=True)
+            st.text_area("請直接對下方框內全選複製 (Ctrl+A -> Ctrl+C)：", value=raw_text_report.strip(), height=250, key="copy_target")
             
             escaped_text = raw_text_report.strip().replace("`", "\\`").replace("'", "\\'")
             js_button_html = f"""
             <div style="text-align: center; width: 100%;">
-                <button onclick="navigator.clipboard.writeText(`{escaped_text}`).then(() => alert('📋 報告老大：狂盟發餉戰報複製成功！請至 Excel 貼上。'));" 
-                style="width: 100%; background-color: #b30000; color: white; border: 2px solid #9a7b2c; padding: 16px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 4px 10px rgba(179,0,0,0.4);">
-                    🦅 複製狂盟戰盟 7 大欄位數據 🦅
+                <button onclick="navigator.clipboard.writeText(`{escaped_text}`).then(() => alert('📋 報告老大：狂盟頂級數據已完美複製！請至 Excel 貼上。'));" 
+                style="width: 100%; background: linear-gradient(180deg, #cc0000 0%, #880000 100%); color: white; border: 2px solid #9a7b2c; padding: 18px; font-size: 18px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 6px 15px rgba(255,0,0,0.4); text-shadow: 1px 1px 3px #000; letter-spacing:2px;">
+                    🦅 一鍵秒複製 7 大欄位狂盟核心數據 🦅
                 </button>
             </div>
             """
-            st.components.v1.html(js_button_html, height=75)
-        else:
-            st.warning("⚔️ 未能擷取到任何有效的戰盟成員數據，請確認金鑰是否過期。")
+            st.components.v1.html(js_button_html, height=80)
