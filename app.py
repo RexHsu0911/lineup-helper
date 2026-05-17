@@ -5,12 +5,13 @@ import io
 import datetime
 import itertools
 import time
+import pandas as pd
 
 # 配置網頁分頁標題與圖示
 st.set_page_config(page_title="狂盟血盟後台系統", page_icon="🏰", layout="wide")
 
 # =====================================================================
-# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V27 版)
+# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V30 版)
 # =====================================================================
 st.markdown("""
     <style>
@@ -179,6 +180,29 @@ st.markdown("""
         transform: scale(1.01) translateY(-2px);
     }
     
+    /* ⚡ 血誓不朽運算中動態等待框 ⚡ */
+    .clan-loading-box {
+        width: 100%;
+        background: linear-gradient(135deg, #150505 0%, #080202 100%);
+        border: 2px dashed #ff0000;
+        padding: 18px;
+        text-align: center;
+        border-radius: 8px;
+        box-shadow: 0 0 25px rgba(255,0,0,0.5);
+        color: #ff3333;
+        font-size: 18px;
+        font-weight: bold;
+        letter-spacing: 2px;
+        animation: pulseBlinker 2s linear infinite;
+        height: 65px;
+        line-height: 25px;
+    }
+    @keyframes pulseBlinker {
+        0% { opacity: 0.7; box-shadow: 0 0 15px rgba(255,0,0,0.3); }
+        50% { opacity: 1.0; box-shadow: 0 0 30px rgba(255,0,0,0.8); color: #ff9999; }
+        100% { opacity: 0.7; box-shadow: 0 0 15px rgba(255,0,0,0.3); }
+    }
+
     /* 👑 簡約風黑金鋼鐵戰術欄位示意表格 */
     .clan-table-container {
         margin-top: 5px;
@@ -210,31 +234,88 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =====================================================================
-# 2. 核心機制：金鑰與上傳鎖
+# 2. 暫存機制初始化
 # =====================================================================
 if 'saved_api_key' not in st.session_state:
     st.session_state.saved_api_key = ""
-
 if 'uploader_key' not in st.session_state:
     st.session_state.uploader_key = 0
 
-# =====================================================================
-# 3. 戰略操作介面
-# =====================================================================
-st.markdown("""
-    <div class='clan-header'>
-        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V27</div>
-        <div class='clan-subtitle'>COMMAND CENTER • FOR INTERNAL USE OF CLAN LEADERS ONLY</div>
-    </div>
-""", unsafe_allow_html=True)
+# 鎖定預設 CSV 發佈網址（這三個網址未來也可以在側邊欄直接更換）
+if 'sheet_url_members' not in st.session_state:
+    st.session_state.sheet_url_members = ""
+if 'sheet_url_targets' not in st.session_state:
+    st.session_state.sheet_url_targets = ""
+if 'sheet_url_commanders' not in st.session_state:
+    st.session_state.sheet_url_commanders = ""
 
-api_key = st.sidebar.text_input("🔑 狂盟核心 API 認證金鑰：", value=st.session_state.saved_api_key, type="password")
+# =====================================================================
+# 3. 側邊欄：🌐 Google Sheet 究極雲端自動化控制台
+# =====================================================================
+st.sidebar.markdown("<h3 style='color:#d4af37; text-align:center;'>🏰 神殿權限配置</h3>", unsafe_allow_html=True)
+api_key = st.sidebar.text_input("🔑 核心 API 認證金鑰：", value=st.session_state.saved_api_key, type="password")
 if api_key:
     st.session_state.saved_api_key = api_key
 
-st.markdown("<div class='section-tag'>⚔️ 戰報參數設定儀表板</div>", unsafe_allow_html=True)
+st.sidebar.markdown("---")
+st.sidebar.markdown("<h3 style='color:#00ffcc; text-align:center;'>🌐 雲端連動設定中心</h3>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='color:#888; font-size:12px; text-align:center;'>請將 Google 試算表發佈為 CSV 網址後貼於下方：</p>", unsafe_allow_html=True)
 
+url_m = st.sidebar.text_input("📋 1. 成員白名單 CSV 網址：", value=st.session_state.sheet_url_members)
+url_t = st.sidebar.text_input("🎯 2. 出團目標 CSV 網址：", value=st.session_state.sheet_url_targets)
+url_c = st.sidebar.text_input("👑 3. 指揮官名單 CSV 網址：", value=st.session_state.sheet_url_commanders)
+
+if url_m: st.session_state.sheet_url_members = url_m
+if url_t: st.session_state.sheet_url_targets = url_t
+if url_c: st.session_state.sheet_url_commanders = url_c
+
+# =====================================================================
+# 4. 戰略資料庫安全讀取機制（若沒填網址則自動載入鋼鐵預設名單防斷載）
+# =====================================================================
+VALID_NAMES = ["什麼漾子", "湊人數", "和尚洗髮水", "煙雨遙", "小熊闖天下", "波波鼠", "筱駱駱", "佛", "紫楓秋夜", "大都督", "一小法一", "蘇州賣鴨蛋", "霸氣小君", "霸气小君", "天降神運", "齊", "粉色紅頭龜", "飛翔的企鵝", "168", "紅心皇后", "跑皮達人", "柯基", "粉色KITTY", "夜駱駝"]
 base_targets = ["四色", "飛龍", "伊佛", "蟻媽媽", "克特", "掃街", "打架"]
+COMMANDER_LIST = ["齊", "什麼漾子", "筱駱駱", "夜駱駝", "大都督", "副盟主1", "副盟主2"]
+
+# 動態從 Google Sheet 抓取最新白名單
+if st.session_state.sheet_url_members:
+    try:
+        df_m = pd.read_csv(st.session_state.sheet_url_members)
+        if not df_m.empty and df_m.columns[0]:
+            VALID_NAMES = [str(x).strip() for x in df_m.iloc[:, 0].dropna().tolist() if str(x).strip()]
+    except Exception as e:
+        st.sidebar.error(f"⚠️ 白名單雲端同步失敗，啟用備用本地名單")
+
+# 動態從 Google Sheet 抓取最新王怪
+if st.session_state.sheet_url_targets:
+    try:
+        df_t = pd.read_csv(st.session_state.sheet_url_targets)
+        if not df_t.empty and df_t.columns[0]:
+            base_targets = [str(x).strip() for x in df_t.iloc[:, 0].dropna().tolist() if str(x).strip()]
+    except Exception as e:
+        st.sidebar.error(f"⚠️ 出團目標雲端同步失敗，啟用備用本地目標")
+
+# 動態從 Google Sheet 抓取最新指揮官
+if st.session_state.sheet_url_commanders:
+    try:
+        df_c = pd.read_csv(st.session_state.sheet_url_commanders)
+        if not df_c.empty and df_c.columns[0]:
+            COMMANDER_LIST = [str(x).strip() for x in df_c.iloc[:, 0].dropna().tolist() if str(x).strip()]
+    except Exception as e:
+        st.sidebar.error(f"⚠️ 指揮官雲端同步失敗，啟用備用本地統帥")
+
+# =====================================================================
+# 5. 戰略操作主介面（自動計算選單組合）
+# =====================================================================
+st.markdown("""
+    <div class='clan-header'>
+        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V30</div>
+        <div class='clan-subtitle'>COMMAND CENTER • GOOGLE SHEETS LIVE SYNCHRONIZED VERSION</div>
+    </div>
+""", unsafe_allow_html=True)
+
+st.markdown("<div class='section-tag'>⚔️ 戰報參數設定儀表板 (已與雲端同步)</div>", unsafe_allow_html=True)
+
+# 動態生成出團王組合（自動置頂最熱門的 飛龍+四色+伊佛）
 all_combinations = []
 for r in range(1, len(base_targets) + 1):
     for combo in itertools.combinations(base_targets, r):
@@ -243,7 +324,6 @@ if "飛龍+四色+伊佛" in all_combinations:
     all_combinations.remove("飛龍+四色+伊佛")
 all_combinations.insert(0, "飛龍+四色+伊佛")
 
-COMMANDER_LIST = ["齊", "什麼漾子", "筱駱駱", "夜駱駝", "大都督", "副盟主1", "副盟主2"]
 time_options = [f"{str(h).zfill(2)}00" for h in range(24)]
 
 col_date, col_time = st.columns(2)
@@ -256,7 +336,7 @@ col_target, col_cmd = st.columns(2)
 with col_target:
     selected_target = st.selectbox("🎯 征討核心目標:", options=all_combinations)
 with col_cmd:
-    selected_commander = st.selectbox("👑 戰場最高統帥指揮官:", options=COMMANDER_LIST, index=0)
+    selected_commander = st.selectbox("👑 戰場最高統帥指揮官:", options=COMMANDER_LIST, index=0 if "齊" in COMMANDER_LIST else 0)
 
 st.markdown("<br><div class='section-tag'>📸 戰場軍情影像熔爐</div>", unsafe_allow_html=True)
 
@@ -281,7 +361,7 @@ if uploaded_files:
             st.image(img_preview, caption=f"軍情圖片 {idx+1}", use_container_width=True)
 
 # =====================================================================
-# 4. 操作控制台
+# 6. 操作控制台
 # =====================================================================
 st.markdown("<br>", unsafe_allow_html=True)
 btn_col1, btn_col2 = st.columns(2)
@@ -296,7 +376,8 @@ with btn_col1:
         """, unsafe_allow_html=True)
         execute_click = False
     else:
-        execute_click = st.button("🔥 發動總攻擊！啟動狂盟核心點名認列", key="attack_btn", use_container_width=True)
+        button_placeholder = st.empty()
+        execute_click = button_placeholder.button("🔥 發動總攻擊！啟動狂盟核心點名認列", key="attack_btn", use_container_width=True)
 
 with btn_col2:
     if is_uploading:
@@ -307,14 +388,15 @@ with btn_col2:
             st.rerun()
 
 # =====================================================================
-# 5. 🎯 狂盟大破大立不漏字核心提示詞
+# 7. 🎯 狂盟大破大立雲端白名單注入提示詞
 # =====================================================================
-PROMPT_TEMPLATE = """
+white_list_str = "、".join(VALID_NAMES)
+PROMPT_TEMPLATE = f"""
 你現在是《天堂》遊戲血盟的頂級行政秘書。請對這張圖片左下角的「藍色小隊名單 UI 區塊」進行地毯式掃描。
 必須找出名單中的每一個人，絕對不准有任何遺漏！
 
 請逐字核對以下【狂盟官方白名單】：
-什麼漾子、湊人數、和尚洗髮水、煙雨遙、小熊闖天下、波波鼠、筱駱駱、佛、紫楓秋夜、大都督、一小法一、蘇州賣鴨蛋、霸气小君、霸氣小君、天降神運、齊、粉色紅頭龜、飛翔的企鵝、168、紅心皇后、跑皮達人、柯基、粉色KITTY、夜駱駝。
+{white_list_str}
 
 【👑 特級鐵律：隊長與名單分離】
 1. 隊伍最上面第一行（正前方帶有黃金皇冠圖標）的名字是「隊長」。如果最上面看到的是單字「齊」，請確認他是獨立的一行，他就是隊長！絕對不准漏掉他，也不准把他和下方的隊員合在一起！
@@ -327,20 +409,20 @@ PROMPT_TEMPLATE = """
 [MEMBER] 隊員名字
 """
 
-VALID_NAMES = [
-    "什麼漾子", "湊人數", "和尚洗髮水", "煙雨遙", "小熊闖天下", "波波鼠", 
-    "筱駱駱", "佛", "紫楓秋夜", "大都督", "一小法一", "蘇州賣鴨蛋", "霸氣小君", "霸气小君", "天降神運", 
-    "齊", "粉色紅頭龜", "飛翔的企鵝", "168", "紅心皇后", "跑皮達人", "柯基", "粉色KITTY", "夜駱駝"
-]
-
 # =====================================================================
-# 6. 核心處理與報告輸出
+# 8. 核心處理與報告輸出
 # =====================================================================
 if execute_click:
     if not api_key:
         st.error("⚠️ 老大！請先在左側邊欄鎖定您的 狂盟核心 API 金鑰！")
     elif uploaded_files:
-        time.sleep(0.5)
+        button_placeholder.markdown("""
+            <div class='clan-loading-box'>
+                ⚡ 狂盟核心雲端資料同步中 + 熔爐正全馬力運算... 請老大稍候...
+            </div>
+        """, unsafe_allow_html=True)
+        
+        time.sleep(0.2)
         
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-2.5-flash')
@@ -379,19 +461,16 @@ if execute_click:
                 for line in lines:
                     cleaned = line.replace("[LEADER]", "").replace("[MEMBER]", "").replace("(隊長)", "").strip()
                     
-                    # 🌟 徹底捨棄會造成誤判與漏字的 break 邏輯，改用精準字串清理比對 🌟
                     matched_name = None
                     for v_name in VALID_NAMES:
-                        # 移除字串中可能存在的所有空格，進行完全等值或乾淨的包含比對
                         if v_name in cleaned.replace(" ", ""):
                             matched_name = v_name
-                            break # 此處 break 僅跳出白名單比對，不影響下一行 line 處理
+                            break
                     
                     if matched_name:
                         has_any_data = True
                         excel_row_base = f"{global_excel_idx}\t{date_str}\t{selected_time}\t{selected_target}\t{selected_commander}\t{matched_name}"
                         
-                        # 只要是該小隊處理出的第一個成員，或者是AI標記為LEADER，就是隊長
                         is_leader = "[LEADER]" in line or "隊長" in line or local_team_idx == 1
                         
                         if is_leader:
@@ -409,6 +488,8 @@ if execute_click:
                 
         report_html += "</div>"
         st.markdown(report_html, unsafe_allow_html=True)
+        
+        button_placeholder.button("🔥 發動總攻擊！啟動狂盟核心點名認列", key="attack_btn_done", use_container_width=True)
         
         if has_any_data:
             st.markdown("<br><div class='section-tag'>📋 狂盟直貼 Excel 數據中心 (完美相容 7 大直欄)</div>", unsafe_allow_html=True)
