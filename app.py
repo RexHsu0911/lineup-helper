@@ -11,7 +11,7 @@ import pandas as pd
 st.set_page_config(page_title="狂盟血盟後台系統", page_icon="🏰", layout="wide")
 
 # =====================================================================
-# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V33 版)
+# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V34 版)
 # =====================================================================
 st.markdown("""
     <style>
@@ -290,7 +290,6 @@ COMMANDER_LIST = []
 # 動態抓取成員白名單
 if st.session_state.sheet_url_members:
     try:
-        # header=None 將 A1 視為第 0 列數據，隨後用 skiprows=[0] 強制完全抹去 A1，從 A2 開始精準向後抓取
         df_m = pd.read_csv(st.session_state.sheet_url_members, header=None, skiprows=[0], encoding='utf-8')
         if not df_m.empty:
             VALID_NAMES = [str(x).strip() for x in df_m.iloc[:, 0].dropna().tolist() if str(x).strip()]
@@ -320,8 +319,8 @@ if st.session_state.sheet_url_commanders:
 # =====================================================================
 st.markdown("""
     <div class='clan-header'>
-        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V33</div>
-        <div class='clan-subtitle'>COMMAND CENTER • PURE CLOUD LIVE SYNCHRONIZED VERSION</div>
+        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V34</div>
+        <div class='clan-subtitle'>COMMAND CENTER • LIVE SYNCHRONIZED FUZZY TOLERANT VERSION</div>
     </div>
 """, unsafe_allow_html=True)
 
@@ -403,148 +402,17 @@ else:
                 st.rerun()
 
     # =====================================================================
-    # 7. 🎯 狂盟大破大立雲端白名單注入提示詞
+    # 7. 🎯 狂盟 AI 模糊容錯大破大立提示詞 (核心升級 V34)
     # =====================================================================
     white_list_str = "、".join(VALID_NAMES)
     PROMPT_TEMPLATE = f"""
-    你現在是《天堂》遊戲血盟的頂級行政秘書。請對這張圖片左下角的「藍色小隊名單 UI 區塊」進行地毯式掃描。
-    必須找出名單中的每一個人，絕對不准有任何遺漏！
+    你現在是《天堂》遊戲血盟的頂級行政秘書。請對這張圖片左下角的「藍色小隊名單 UI 區塊」進行最嚴密、最全面的地毯式掃描。
+    必須找出名單中的每一個人，絕對不准漏掉任何一個字元！
 
     請逐字核對以下【狂盟官方白名單】：
     {white_list_str}
 
-    【👑 特級鐵律：隊長與名單分離】
-    1. 隊伍最上面第一行（正前方帶有黃金皇冠圖標）的名字是「隊長」。如果最上面看到的是單字「齊」，請確認他是獨立的一行，他就是隊長！絕對不准漏掉他，也不准把他和下方的隊員合在一起！
-    2. 請由上到下，精準輸出小隊中所有符合白名單的名字。每行一個名字。
-
-    【精準輸出格式】：
-    不准輸出任何額外廢話，嚴格依據以下格式回傳：
-    [LEADER] 隊長名字
-    [MEMBER] 隊員名字
-    [MEMBER] 隊員名字
-    """
-
-    # =====================================================================
-    # 8. 核心處理與報告輸出
-    # =====================================================================
-    if execute_click:
-        if not api_key:
-            st.error("⚠️ 老大！請先在左側邊欄鎖定您的 狂盟核心 API 金鑰！")
-        elif uploaded_files:
-            # 🔥 底部置中升級：按鈕按下後，會在正下方跳出完美置中的精簡發光等待盒
-            button_placeholder.markdown("""
-                <div class='clan-loading-wrapper'>
-                    <div class='clan-loading-box'>
-                        ⚡ 狂盟核心大會師：雲端熔爐正全馬力運算中... 請老大稍候...
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            time.sleep(0.2)
-            
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-2.5-flash')
-            
-            date_str = selected_date.strftime("%Y%m%d")
-            raw_text_report = ""
-            
-            report_html = f"""
-            <div class='report-box'>
-                <div class='section-tag' style='background:none; border:none; padding:0; color:#ff0000; font-size:20px;'>🦅 狂盟點名大會師 - 成果報告庫</div>
-                <div style='font-size: 15px; margin: 15px 0 25px 0; line-height:1.6; border-bottom: 1px solid #443615; padding-bottom: 15px;'>
-                    <b style='color: #d4af37; font-size:16px;'>【本次戰報核心資訊】</b><br>
-                    戰役日期: <span style='color:#fff; font-weight:bold;'>{date_str}</span><br>
-                    吹哨時間: <span style='color:#fff; font-weight:bold;'>{selected_time}</span><br>
-                    征討目標: <span style='color:#ffcc00; font-weight:bold;'>{selected_target}</span><br>
-                    最高統帥: <span style='color:#ff0000; font-weight:bold;'>{selected_commander}</span>
-                </div>
-            """
-            
-            global_excel_idx = 1
-            has_any_data = False
-            
-            for idx, file in enumerate(uploaded_files, start=1):
-                file.seek(0)
-                file_bytes = file.read()
-                pil_image = Image.open(io.BytesIO(file_bytes))
-                
-                try:
-                    response = model.generate_content([PROMPT_TEMPLATE, pil_image])
-                    ai_output = response.text
-                    lines = ai_output.strip().split('\n')
-                    
-                    report_html += f"<span class='img-title'>📸 戰術分隊 {idx} ({file.name})：</span><br>"
-                    local_team_idx = 1 
-                    
-                    for line in lines:
-                        cleaned = line.replace("[LEADER]", "").replace("[MEMBER]", "").replace("(隊長)", "").strip()
-                        
-                        matched_name = None
-                        for v_name in VALID_NAMES:
-                            if v_name in cleaned.replace(" ", ""):
-                                matched_name = v_name
-                                break
-                        
-                        if matched_name:
-                            has_any_data = True
-                            excel_row_base = f"{global_excel_idx}\t{date_str}\t{selected_time}\t{selected_target}\t{selected_commander}\t{matched_name}"
-                            
-                            is_leader = "[LEADER]" in line or "隊長" in line or local_team_idx == 1
-                            
-                            if is_leader:
-                                report_html += f"<div class='leader-orange'>{local_team_idx}. 🎖️ {matched_name} (隊長)</div>"
-                                raw_text_report += f"{excel_row_base}\t隊長\n"
-                            else:
-                                report_html += f"<div class='member-w'>{local_team_idx}. {matched_name}</div>"
-                                raw_text_report += f"{excel_row_base}\t\n"
-                            
-                            local_team_idx += 1
-                            global_excel_idx += 1
-                            
-                except Exception as e:
-                    st.error(f"❌ 軍情影像 {idx} 處理失敗：{e}")
-                    
-            report_html += "</div>"
-            st.markdown(report_html, unsafe_allow_html=True)
-            
-            button_placeholder.button("🔥 發動總攻擊！啟動狂盟核心點名認列", key="attack_btn_done", use_container_width=True)
-            
-            if has_any_data:
-                st.markdown("<br><div class='section-tag'>📋 狂盟直貼 Excel 數據中心 (完美相容 7 大直欄)</div>", unsafe_allow_html=True)
-                st.markdown("<b style='color:#ffffff; font-size:15px;'>請直接對下方框內全選複製 (Ctrl+A → Ctrl+C)：</b>", unsafe_allow_html=True)
-                
-                # 簡約風黑金戰術欄位示意表格
-                st.markdown("""
-                    <div class='clan-table-container'>
-                        <table class='clan-table'>
-                            <thead>
-                                <tr>
-                                    <th>序號</th>
-                                    <th>日期</th>
-                                    <th>時間</th>
-                                    <th>出團目標</th>
-                                    <th>指揮官</th>
-                                    <th>成員名單</th>
-                                    <th>職位</th>
-                                </tr>
-                            </thead>
-                        </table>
-                    </div>
-                """, unsafe_allow_html=True)
-                
-                # 數據顯示文字框
-                st.text_area("", value=raw_text_report.strip(), height=250, key="copy_target", label_visibility="collapsed")
-                st.markdown("<br>", unsafe_allow_html=True)
-                
-                escaped_text = raw_text_report.strip().replace("`", "\\`").replace("'", "\\'")
-                js_button_html = f"""
-                <div style="text-align: center; width: 100%;">
-                    <button onclick="navigator.clipboard.writeText(`{escaped_text}`).then(() => alert('📋 報告老大：狂盟頂級數據已完美複製！請至 Excel 貼上。'));" 
-                    style="width: 100%; background: linear-gradient(180deg, #cc0000 0%, #880000 100%); color: white; border: 2px solid #d4af37; padding: 18px; font-size: 18px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 6px 15px rgba(255,0,0,0.4); text-shadow: 1px 1px 3px #000; letter-spacing:2px;">
-                        🦅 一鍵秒複製 7 大欄位狂盟核心數據 🦅
-                    </button>
-                </div>
-                """
-                st.components.v1.html(js_button_html, height=80)
-            else:
-                st.warning("⚔️ 未能擷取到任何有效的戰盟成員數據，請確認金鑰是否過期。")
+    【🔥 頂級特級鐵律：AI 模糊容錯與標準化校正】
+    1. 由於遊戲字體與截圖清晰度問題，圖片中的文字可能產生簡繁錯置（如 氣 與 气）、相似字（如 1 與 一）或細微空格。
+       只要圖片中的名字與上述【官方白名單】高度相似或音近，你必須「認列」並「自動轉換為白名單上的標準正確文字」輸出！
+    2. 隊伍最上面第一行（正前方帶有黃金皇冠圖標）的名字是「隊長」。即使是最上面看到單字「齊」，他也是獨立的隊長行！絕對不准漏掉
