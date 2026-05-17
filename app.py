@@ -1,149 +1,17 @@
 import streamlit as st
+import os
 
 # 設定 Streamlit 頁面為寬螢幕模式
 st.set_page_config(layout="wide")
 
-# 將前端 HTML/CSS/JS 代碼完整封裝
-html_code = """
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>天堂戰役物資津貼統計系統 - Excel 優化版</title>
-    <style>
-        :root {
-            --bg-dark: #0f0f0f;
-            --bg-card: #161616;
-            --gold-primary: #d4af37;
-            --gold-hover: #f3e5ab;
-            --text-light: #e0e0e0;
-            --text-muted: #777777;
-            --border-color: #262626;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; }
-        body { background-color: var(--bg-dark); color: var(--text-light); padding: 1rem; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
-        .container { width: 100%; max-width: 900px; background: var(--bg-card); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 2rem; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9); margin: 0 auto; }
-        .header-zone { text-align: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem; }
-        h1 { color: var(--gold-primary); font-size: 1.6rem; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 0.5rem; }
-        .subtitle { color: var(--text-muted); font-size: 0.85rem; }
-        .api-zone { background: #1f1a0a; border: 1px solid #4a3b11; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; }
-        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 0.5rem; color: var(--gold-primary); font-size: 0.85rem; font-weight: 600; }
-        select, input[type="text"], textarea { width: 100%; padding: 0.8rem; background-color: #0a0a0a; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-light); font-size: 0.95rem; transition: all 0.3s ease; }
-        .upload-box { border: 1px dashed var(--gold-primary); padding: 2rem; text-align: center; border-radius: 8px; cursor: pointer; background-color: #0a0a0a; }
-        #file-input { display: none; }
-        .preview-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 1rem; }
-        .preview-item { position: relative; width: 80px; height: 80px; border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; }
-        .preview-item img { width: 100%; height: 100%; object-fit: cover; }
-        .btn-submit { width: 100%; padding: 1rem; background: linear-gradient(135deg, #c5a028, #ecca61); border: none; border-radius: 6px; color: #000; font-size: 1rem; font-weight: bold; letter-spacing: 2px; cursor: pointer; margin-top: 1rem; }
-        .status-bar { margin-top: 1rem; color: #ffcc00; font-size: 0.9rem; text-align: center; display: none; }
-        .result-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); display: none; }
-        .textarea-group textarea { height: 380px; font-family: monospace; font-size: 0.95rem; color: #fff; resize: none; line-height: 1.6; background-color: #0a0a0a; border: 1px solid var(--border-color); }
-        .btn-secondary { padding: 0.6rem 1.5rem; background: #222; border: 1px solid #444; color: #ccc; border-radius: 4px; font-size: 0.85rem; cursor: pointer; margin-top: 0.5rem; float: right; }
-        .btn-secondary:hover { background: #333; color: #fff; border-color: var(--gold-primary); }
-    </style>
-</head>
-<body>
+# 動態讀取同目錄下的 index.html 檔案
+html_path = os.path.join(os.path.dirname(__file__), "index.html")
 
-<div class="container">
-    <div class="header-zone">
-        <h1>Lineage 戰役津貼統計系統</h1>
-        <div class="subtitle">血盟行政秘書處 · Excel 彙整優化版</div>
-    </div>
-
-    <div class="api-zone">
-        <label for="api-key-input" style="color: #ffcc00;">🔑 輸入免費的 Gemini API Key</label>
-        <input type="text" id="api-key-input" placeholder="AIzaSy..." style="margin-top: 0.5rem; border-color: #66521a;">
-    </div>
+if os.path.exists(html_path):
+    with open(html_path, "r", encoding="utf-8") as f:
+        html_code = f.read()
     
-    <div class="grid-inputs">
-        <div class="form-group">
-            <label>戰役日期</label>
-            <select id="date-select"></select>
-        </div>
-        <div class="form-group">
-            <label>戰役指揮官</label>
-            <select id="commander-select">
-                <option value="齊">齊</option>
-                <option value="什麼漾子">什麼漾子</option>
-                <option value="筱駱駱">筱駱駱</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label>參戰名單截圖 (可多選)</label>
-        <div class="upload-box" onclick="document.getElementById('file-input').click()">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="1.5">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                <circle cx="8.5" cy="8.5" r="1.5"/>
-                <polyline points="21 15 16 10 5 21"/>
-            </svg>
-            <p>點擊上傳多張遊戲截圖</p>
-        </div>
-        <input type="file" id="file-input" multiple accept="image/*">
-        <div class="preview-container" id="preview-grid"></div>
-    </div>
-
-    <button class="btn-submit" onclick="callGeminiProAPI()">參團上傳</button>
-    <div class="status-bar" id="status-text">正在啟動 Gemini Pro 旗艦眼，深度解析圖片細節中...</div>
-
-    <div class="result-section" id="result-box">
-        <div class="textarea-group">
-            <label style="font-size: 1rem; color: var(--gold-primary); display: block; margin-bottom: 0.5rem;">📋 下方為可複製的純文字結果：</label>
-            <textarea id="member-list-input" readonly></textarea>
-            <button class="btn-secondary" onclick="copyToClipboard()">一鍵複製結果</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    const dateSelect = document.getElementById('date-select');
-    for (let i = 0; i < 5; i++) {
-        const d = new Date(); d.setDate(d.getDate() - i);
-        const dateStr = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
-        const option = document.createElement('option'); option.value = dateStr; option.textContent = dateStr;
-        dateSelect.appendChild(option);
-    }
-
-    const fileInput = document.getElementById('file-input');
-    const previewGrid = document.getElementById('preview-grid');
-    let uploadedFiles = [];
-
-    fileInput.addEventListener('change', function() {
-        for (let file of this.files) {
-            uploadedFiles.push(file);
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const item = document.createElement('div');
-                item.className = 'preview-item';
-                item.innerHTML = `<img src="${e.target.result}">`;
-                previewGrid.appendChild(item);
-            }
-            reader.readAsDataURL(file);
-        }
-    });
-
-    function fileToGenerativePart(file) {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const base64Data = reader.result.split(',')[1];
-                resolve({ inlineData: { data: base64Data, mimeType: file.type } });
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    async function callGeminiProAPI() {
-        const apiKey = document.getElementById('api-key-input').value.trim();
-        if (!apiKey) { alert('請先輸入您的 Gemini API Key！'); return; }
-        if (uploadedFiles.length === 0) { alert('請先上傳名單截圖！'); return; }
-
-        const statusText = document.getElementById('status-text');
-        statusText.style.display = 'block';
-
-        try {
-            const imageParts = await Promise.all(uploadedFiles.map(file => fileTo
+    # 載入網頁組件並拉滿高度
+    st.components.v1.html(html_code, height=950, scroller=True)
+else:
+    st.error("找不到 index.html 檔案，請確認它與 app.py 在同一個資料夾內。")
