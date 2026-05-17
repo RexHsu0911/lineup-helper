@@ -3,7 +3,7 @@ import streamlit as st
 # 設定 Streamlit 頁面為寬螢幕模式
 st.set_page_config(layout="wide")
 
-# 將 HTML 與 JavaScript 代碼用 Python 字串包裝
+# 將前端 HTML/CSS/JS 代碼完整封裝
 html_code = """
 <!DOCTYPE html>
 <html lang="zh-TW">
@@ -88,3 +88,62 @@ html_code = """
     </div>
 
     <button class="btn-submit" onclick="callGeminiProAPI()">參團上傳</button>
+    <div class="status-bar" id="status-text">正在啟動 Gemini Pro 旗艦眼，深度解析圖片細節中...</div>
+
+    <div class="result-section" id="result-box">
+        <div class="textarea-group">
+            <label style="font-size: 1rem; color: var(--gold-primary); display: block; margin-bottom: 0.5rem;">📋 下方為可複製的純文字結果：</label>
+            <textarea id="member-list-input" readonly></textarea>
+            <button class="btn-secondary" onclick="copyToClipboard()">一鍵複製結果</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const dateSelect = document.getElementById('date-select');
+    for (let i = 0; i < 5; i++) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        const dateStr = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+        const option = document.createElement('option'); option.value = dateStr; option.textContent = dateStr;
+        dateSelect.appendChild(option);
+    }
+
+    const fileInput = document.getElementById('file-input');
+    const previewGrid = document.getElementById('preview-grid');
+    let uploadedFiles = [];
+
+    fileInput.addEventListener('change', function() {
+        for (let file of this.files) {
+            uploadedFiles.push(file);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+                item.innerHTML = `<img src="${e.target.result}">`;
+                previewGrid.appendChild(item);
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    function fileToGenerativePart(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64Data = reader.result.split(',')[1];
+                resolve({ inlineData: { data: base64Data, mimeType: file.type } });
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function callGeminiProAPI() {
+        const apiKey = document.getElementById('api-key-input').value.trim();
+        if (!apiKey) { alert('請先輸入您的 Gemini API Key！'); return; }
+        if (uploadedFiles.length === 0) { alert('請先上傳名單截圖！'); return; }
+
+        const statusText = document.getElementById('status-text');
+        statusText.style.display = 'block';
+
+        try {
+            const imageParts = await Promise.all(uploadedFiles.map(file => fileTo
