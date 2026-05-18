@@ -327,7 +327,7 @@ if st.session_state['sheet_url_commanders']:
 # =====================================================================
 st.markdown("""
     <div class='clan-header'>
-        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V39</div>
+        <div class='clan-title'>🏰 狂盟霸業 - 頂級 AI 戰略行政系統 V39</div>
         <div class='clan-subtitle'>COMMAND CENTER • LIVE SYNCHRONIZED FUZZY TOLERANT VERSION</div>
     </div>
 """, unsafe_allow_html=True)
