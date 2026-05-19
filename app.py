@@ -5,30 +5,26 @@ import io
 import datetime
 import itertools
 import time
+import re
 import pandas as pd
 
 # 配置網頁分頁標題與圖示
 st.set_page_config(page_title="狂盟血盟後台系統", page_icon="🏰", layout="wide")
 
 # =====================================================================
-# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V39 版)
+# 1. 狂盟尊爵：天堂經典血誓不朽視覺風格 (CSS 究極魔改 V41 檔名流版)
 # =====================================================================
 st.markdown("""
     <style>
-    /* 全局戰場迷霧深黑 */
     .main { 
         background-color: #060608; 
         color: #e5e5e7; 
         font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif; 
     }
-    
-    /* 側邊欄高端鐵冷色 */
     [data-testid="stSidebar"] {
         background-color: #0b0b0d !important;
         border-right: 3px solid #d4af37;
     }
-    
-    /* 標題區：狂盟血誓神殿大門 */
     .clan-header {
         background: linear-gradient(135deg, rgba(179,0,0,0.3) 0%, rgba(10,10,12,0.9) 50%, rgba(154,123,44,0.15) 100%);
         border: 2px solid #d4af37;
@@ -54,8 +50,6 @@ st.markdown("""
         font-weight: bold;
         text-shadow: 1px 1px 2px #000;
     }
-    
-    /* 皇家暗金立體報告箱 */
     .report-box { 
         background: linear-gradient(145deg, #0f0f12, #15151a);
         border: 2px solid #d4af37; 
@@ -63,8 +57,6 @@ st.markdown("""
         border-radius: 10px; 
         box-shadow: 0 15px 35px rgba(0,0,0,0.9), 0 0 20px rgba(212,175,55,0.15);
     }
-    
-    /* 區塊核心發光標題 */
     .section-tag {
         color: #ffffff;
         font-size: 19px;
@@ -76,8 +68,6 @@ st.markdown("""
         border-left: 6px solid #ff0000;
         text-shadow: 1px 1px 3px #000;
     }
-    
-    /* 圖片分隊卡片 */
     .img-title { 
         color: #ffcc00; 
         font-weight: bold; 
@@ -87,8 +77,15 @@ st.markdown("""
         border-bottom: 2px solid #443615;
         padding-bottom: 6px;
     }
-    
-    /* 👑 隊長一律顯示為爆擊橘色 */
+    .filename-pill {
+        background-color: #1a1a24;
+        color: #00ffcc;
+        border: 1px solid #00aa88;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 14px;
+    }
     .leader-orange { 
         color: #ff4500 !important; 
         font-weight: bold !important; 
@@ -98,8 +95,6 @@ st.markdown("""
         text-shadow: 1px 1px 4px #000; 
     }
     .member-w { color: #e5e5e7; padding-left: 20px; margin: 6px 0; font-size: 16px; }
-    
-    /* 🚨 鮮紅爆擊字體：未列入白名單(待確認/更新) 或 重複登記 */
     .unconfirmed-red {
         color: #ff0000 !important;
         font-weight: bold !important;
@@ -108,490 +103,382 @@ st.markdown("""
         margin: 6px 0;
         text-shadow: 0 0 10px rgba(255,0,0,0.5);
     }
-    
-    /* 修改所有預設 Label 顏色為不朽金 */
     label { 
         color: #d4af37 !important; 
         font-weight: bold !important; 
         font-size: 16px !important;
         letter-spacing: 1px;
         text-shadow: 1px 1px 2px #000;
-        margin-bottom: 8px !important;
     }
-    
-    /* 下拉選單與輸入框徹底移除游標小框框 */
-    input, select, div[data-baseweb="select"], div[data-baseweb="input"], .stSelectbox, .stDateInput {
-        background-color: #111114 !important;
-        color: #ffffff !important;
-        border-radius: 6px !important;
-        transition: all 0.2s ease-in-out !important;
-    }
-    
-    div[data-baseweb="select"] {
-        border: 1px solid #d4af37 !important;
-    }
-    input {
-        border: 1px solid #d4af37 !important;
-        caret-color: transparent !important;
-    }
-    
-    div[data-baseweb="select"]:focus-within, div[data-baseweb="input"]:focus-within, input:focus {
-        border-color: #ff0000 !important;
-        box-shadow: 0 0 14px rgba(255,0,0,0.7) !important;
-    }
-    
     div[data-testid="stFileUploader"] {
         background-color: #0b0b0d;
         border: 2px dashed #b30000 !important;
         border-radius: 10px;
         padding: 15px;
     }
-    
-    /* 💥 按鈕控制台 */
     div.stButton > button[key="attack_btn"] {
         background: linear-gradient(180deg, #ff0000 0%, #aa0000 50%, #660000 100%) !important;
         color: #ffffff !important;
         font-weight: 900 !important;
         font-size: 22px !important;
         border: 2px solid #ffcc00 !important;
-        box-shadow: 0 0 20px rgba(255,0,0,0.7), inset 0 0 10px rgba(255,255,255,0.3) !important;
+        box-shadow: 0 0 20px rgba(255,0,0,0.7) !important;
         text-shadow: 2px 2px 5px #000000, 0 0 10px #ff0000 !important;
         letter-spacing: 3px !important;
-        transition: all 0.2s ease !important;
         height: 65px !important;
         border-radius: 8px !important;
-        cursor: pointer !important;
     }
     div.stButton > button[key="attack_btn"]:hover {
         background: linear-gradient(180deg, #ff3333 0%, #cc0000 50%, #880000 100%) !important;
-        box-shadow: 0 0 35px rgba(255,0,0,1), 0 0 15px #ffcc00 !important;
-        transform: scale(1.01) translateY(-2px);
+        box-shadow: 0 0 35px rgba(255,0,0,1) !important;
     }
-    
     div.stButton > button[key="reset_btn"] {
         background: linear-gradient(180deg, #333338 0%, #1c1c1f 50%, #0d0d0f 100%) !important;
         color: #d4af37 !important;
         font-weight: 900 !important;
         font-size: 18px !important;
         border: 2px solid #554518 !important;
-        text-shadow: 2px 2px 3px #000000 !important;
-        letter-spacing: 2px !important;
-        transition: all 0.2s ease !important;
         height: 65px !important;
         border-radius: 8px !important;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.5) !important;
-        cursor: pointer !important;
     }
-    div.stButton > button[key="reset_btn"]:hover {
-        background: linear-gradient(180deg, #44444a 0%, #29292e 50%, #16161a 100%) !important;
-        color: #ffffff !important;
-        border-color: #d4af37 !important;
-        box-shadow: 0 0 20px rgba(212,175,55,0.4) !important;
-        transform: scale(1.01) translateY(-2px);
-    }
-    
-    /* ⚡ 鐵血神殿：讀取請稍後核心對齊控制盒 ⚡ */
-    .clan-loading-wrapper {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        margin-top: 5px;
-    }
+    .clan-loading-wrapper { display: flex; justify-content: center; align-items: center; width: 100%; }
     .clan-loading-box {
-        width: 100%;
-        max-width: 600px;
-        background: linear-gradient(135deg, #150505 0%, #080202 100%);
-        border: 2px dashed #ff0000;
-        padding: 15px;
-        text-align: center;
-        border-radius: 8px;
-        box-shadow: 0 0 25px rgba(255,0,0,0.6);
-        color: #ff3333;
-        font-size: 18px;
-        font-weight: bold;
-        letter-spacing: 2px;
-        animation: pulseBlinker 2s linear infinite;
-        height: 55px;
-        line-height: 22px;
+        width: 100%; max-width: 600px; background: linear-gradient(135deg, #150505 0%, #080202 100%);
+        border: 2px dashed #ff0000; padding: 15px; text-align: center; border-radius: 8px;
+        box-shadow: 0 0 25px rgba(255,0,0,0.6); color: #ff3333; font-size: 18px; font-weight: bold;
+        animation: pulseBlinker 2s linear infinite; height: 55px; line-height: 22px;
     }
     @keyframes pulseBlinker {
-        0% { opacity: 0.7; box-shadow: 0 0 15px rgba(255,0,0,0.3); }
-        50% { opacity: 1.0; box-shadow: 0 0 30px rgba(255,0,0,0.9); color: #ffbcbc; }
-        100% { opacity: 0.7; box-shadow: 0 0 15px rgba(255,0,0,0.3); }
+        0% { opacity: 0.7; } 50% { opacity: 1.0; color: #ffbcbc; } 100% { opacity: 0.7; }
     }
-
-    /* 👑 鋼鐵戰術欄位示意表格 */
-    .clan-table-container {
-        margin-top: 5px;
-        margin-bottom: 5px;
-        border: 1px solid #d4af37;
-        border-radius: 4px;
-        overflow: hidden;
-    }
-    .clan-table {
-        width: 100%;
-        border-collapse: collapse;
-        background-color: #0c0c0e;
-        text-align: center;
-    }
+    .clan-table-container { margin-top: 5px; margin-bottom: 5px; border: 1px solid #d4af37; border-radius: 4px; overflow: hidden; }
+    .clan-table { width: 100%; border-collapse: collapse; background-color: #0c0c0e; text-align: center; }
     .clan-table th {
-        background: linear-gradient(180deg, #1a1a1e 0%, #0d0d10 100%);
-        color: #d4af37;
-        font-weight: bold;
-        font-size: 14px;
-        padding: 8px;
-        border-bottom: 1px solid #33270c;
-        border-right: 1px solid #221a08;
-        letter-spacing: 2px;
-    }
-    .clan-table th:last-child {
-        border-right: none;
+        background: linear-gradient(180deg, #1a1a1e 0%, #0d0d10 100%); color: #d4af37;
+        font-weight: bold; font-size: 14px; padding: 8px; border-bottom: 1px solid #33270c; border-right: 1px solid #221a08;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # =====================================================================
-# 2. 🛡️ 鐵血防禦：記憶體狀態安全錨點
+# 2. 🛡️ 鐵血防禦：安全鎖定錨點
 # =====================================================================
-if 'saved_api_key' not in st.session_state:
-    st.session_state['saved_api_key'] = ""
+if 'saved_api_key' not in st.session_state: st.session_state['saved_api_key'] = ""
+if 'uploader_key' not in st.session_state: st.session_state['uploader_key'] = 0
 
-if 'uploader_key' not in st.session_state:
-    st.session_state['uploader_key'] = 0
-
-# 直接連結老大的雲端中央試算表
 default_url_m = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTnOiq6sWHfimLY5BTNOSf5pyXHNcymkxYHr2hyN8ChS0qBt3qCcldc3cdqJu7BXzjZccA8dpwIiah/pub?gid=0&single=true&output=csv"
-default_url_t = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTnOiq6sWHfimLY5BTNOSf5pyXHNcymkxYHr2hyN8ChS0qBt3qCcldc3cdqJu7BXzjZccA8dpwIiah/pub?gid=850131825&single=true&output=csv"
-default_url_c = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTnOiq6sWHfimLY5BTNOSf5pyXHNcymkxYHr2hyN8ChS0qBt3qCcldc3cdqJu7BXzjZccA8dpwIiah/pub?gid=110345115&single=true&output=csv"
-
-if 'sheet_url_members' not in st.session_state:
-    st.session_state['sheet_url_members'] = default_url_m
-if 'sheet_url_targets' not in st.session_state:
-    st.session_state['sheet_url_targets'] = default_url_t
-if 'sheet_url_commanders' not in st.session_state:
-    st.session_state['sheet_url_commanders'] = default_url_c
+if 'sheet_url_members' not in st.session_state: st.session_state['sheet_url_members'] = default_url_m
 
 # =====================================================================
-# 3. 側邊欄：🌐 Google Sheet 雲端連動設定中心
+# 3. 側邊欄配置
 # =====================================================================
 st.sidebar.markdown("<h3 style='color:#d4af37; text-align:center;'>🏰 神殿權限配置</h3>", unsafe_allow_html=True)
 api_key = st.sidebar.text_input("🔑 核心 API 認證金鑰：", value=st.session_state['saved_api_key'], type="password")
-if api_key:
-    st.session_state['saved_api_key'] = api_key
+if api_key: st.session_state['saved_api_key'] = api_key
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("<h3 style='color:#00ffcc; text-align:center;'>🌐 雲端連動設定中心</h3>", unsafe_allow_html=True)
-
-url_m = st.sidebar.text_input("📋 1. 成員白名單 CSV 網址：", value=st.session_state['sheet_url_members'])
-url_t = st.sidebar.text_input("🎯 2. 出團目標 CSV 網址：", value=st.session_state['sheet_url_targets'])
-url_c = st.sidebar.text_input("👑 3. 指揮官名單 CSV 網址：", value=st.session_state['sheet_url_commanders'])
-
+url_m = st.sidebar.text_input("📋 成員白名單 CSV 網址：", value=st.session_state['sheet_url_members'])
 if url_m: st.session_state['sheet_url_members'] = url_m.strip()
-if url_t: st.session_state['sheet_url_targets'] = url_t.strip()
-if url_c: st.session_state['sheet_url_commanders'] = url_c.strip()
 
-# =====================================================================
-# 4. 🔥 鐵血指令：動態抓取雲端數據
-# =====================================================================
+# 加載成員白名單
 VALID_NAMES = []
-base_targets = []
-COMMANDER_LIST = []
-
 if st.session_state['sheet_url_members']:
     try:
         df_m = pd.read_csv(st.session_state['sheet_url_members'], header=None, skiprows=[0], encoding='utf-8')
-        if not df_m.empty:
-            VALID_NAMES = [str(x).strip() for x in df_m.iloc[:, 0].dropna().tolist() if str(x).strip()]
-    except Exception as e:
-        st.sidebar.error("⚠️ 無法讀取雲端成員名單，請確認網址。")
-
-if st.session_state['sheet_url_targets']:
-    try:
-        df_t = pd.read_csv(st.session_state['sheet_url_targets'], header=None, skiprows=[0], encoding='utf-8')
-        if not df_t.empty:
-            base_targets = [str(x).strip() for x in df_t.iloc[:, 0].dropna().tolist() if str(x).strip()]
-    except Exception as e:
-        st.sidebar.error("⚠️ 無法讀取雲端出團目標，請確認網址。")
-
-if st.session_state['sheet_url_commanders']:
-    try:
-        df_c = pd.read_csv(st.session_state['sheet_url_commanders'], header=None, skiprows=[0], encoding='utf-8')
-        if not df_c.empty:
-            COMMANDER_LIST = [str(x).strip() for x in df_c.iloc[:, 0].dropna().tolist() if str(x).strip()]
-    except Exception as e:
-        st.sidebar.error("⚠️ 無法讀取雲端指揮官名單，請確認網址。")
+        if not df_m.empty: VALID_NAMES = [str(x).strip() for x in df_m.iloc[:, 0].dropna().tolist() if str(x).strip()]
+    except: pass
 
 # =====================================================================
-# 5. 主介面：戰略儀表板
+# 4. 檔名全自動解構核心函數 (Regex 智慧過濾器)
+# =====================================================================
+def parse_filename_data(filename):
+    """
+    支援格式範例：
+    - 0518 0000 四色-1.jpg -> 日期:0518, 時間:0000, 目標:四色, 指揮官:無, 分隊:1
+    - 0518 0200 大場 指揮官齊-3.jpg -> 日期:0518, 時間:0200, 目標:大場, 指揮官:齊, 分隊:3
+    """
+    # 移除副檔名
+    name_clean = re.sub(r'\.(jpg|jpeg|png|PNG|JPG|JPEG)$', '', filename).strip()
+    
+    # 初始化預設值
+    date_out = "20260517"  # 預設年份 2026 加上解構出的月日
+    time_out = "0000"
+    target_out = "未明"
+    commander_out = "無"
+    team_num_out = "1"
+    
+    # 1. 優先切出最後面的分隊號 (例如 -3 或 -1)
+    if '-' in name_clean:
+        parts_dash = name_clean.split('-')
+        team_num_out = parts_dash[-1].strip()
+        name_clean = "-".join(parts_dash[:-1]).strip()
+        
+    # 2. 用空格拆解核心大直欄
+    tokens = [t.strip() for t in name_clean.split(' ') if t.strip()]
+    
+    if len(tokens) >= 1:
+        # 如果是 4 碼就補上 2026 年份前綴
+        raw_date = tokens[0]
+        date_out = f"2026{raw_date}" if len(raw_date) == 4 else raw_date
+        
+    if len(tokens) >= 2:
+        time_out = tokens[1]
+        
+    # 3. 處理剩餘的 token，尋找「指揮官」關鍵字與「出團目標」
+    remains = tokens[2:] if len(tokens) > 2 else []
+    target_parts = []
+    
+    for tk in remains:
+        if "指揮官" in tk:
+            # 抽離出指揮官後方的大名
+            cmd_clean = tk.replace("指揮官", "").replace(":", "").replace("-", "").strip()
+            if cmd_clean:
+                commander_out = cmd_clean
+        else:
+            target_parts.append(tk)
+            
+    if target_parts:
+        target_out = " ".join(target_parts)
+        
+    return date_out, time_out, target_out, commander_out, team_num_out
+
+# =====================================================================
+# 5. 主介面儀表板
 # =====================================================================
 st.markdown("""
     <div class='clan-header'>
-        <div class='clan-title'>🏰 狂盟霸業 - 頂級 AI 戰略行政系統 V39</div>
-        <div class='clan-subtitle'>COMMAND CENTER • LIVE SYNCHRONIZED FUZZY TOLERANT VERSION</div>
+        <div class='clan-title'>🏰 狂盟血誓戰盟 - 頂級 AI 戰略行政系統 V41</div>
+        <div class='clan-subtitle'>COMMAND CENTER • FILENAME-DRIVEN INTELLIGENT PARSING VERSION</div>
     </div>
 """, unsafe_allow_html=True)
 
-if not VALID_NAMES or not base_targets or not COMMANDER_LIST:
-    st.error("🚨 報告老大：系統檢測到目前雲端資料庫抓取為空！請確認左側連動設定中心的 CSV 網址是否填寫正確。")
+if not VALID_NAMES:
+    st.error("🚨 報告老大：系統檢測到目前雲端成員資料庫抓取為空！請確認左側 CSV 網址。")
 else:
-    st.markdown("<div class='section-tag'>⚔️ 戰報參數設定儀表板 (已與雲端即時同步)</div>", unsafe_allow_html=True)
-
-    # 動態生成出團王組合
-    all_combinations = []
-    for r in range(1, len(base_targets) + 1):
-        for combo in itertools.combinations(base_targets, r):
-            all_combinations.append("+".join(combo))
-    if "飛龍+四色+伊佛" in all_combinations:
-        all_combinations.remove("飛龍+四色+伊佛")
-    all_combinations.insert(0, "飛龍+四色+伊佛")
-
-    time_options = [f"{str(h).zfill(2)}00" for h in range(24)]
-
-    col_date, col_time = st.columns(2)
-    with col_date:
-        selected_date = st.date_input("📅 戰役發動日期:", datetime.date(2026, 5, 17))
-    with col_time:
-        selected_time = st.selectbox("⏰ 吹哨集結時間 (整點):", options=time_options, index=8)
-
-    col_target, col_cmd = st.columns(2)
-    with col_target:
-        selected_target = st.selectbox("🎯 征討核心目標:", options=all_combinations)
-    with col_cmd:
-        selected_commander = st.selectbox("👑 戰場最高統帥指揮官:", options=COMMANDER_LIST, index=0 if "齊" in COMMANDER_LIST else 0)
-
-    st.markdown("<br><div class='section-tag'>📸 戰場軍情影像熔爐</div>", unsafe_allow_html=True)
-
+    st.markdown("<div class='section-tag'>📸 戰場軍情影像熔爐 (💡 檔名全自動讀取技術 - 儀表板已移除)</div>", unsafe_allow_html=True)
+    
     current_key_val = st.session_state.get('uploader_key', 0)
     uploaded_files = st.file_uploader(
-        "請將本次戰役的所有小隊截圖拖曳至此：", 
-        accept_multiple_files=True, 
-        type=['png', 'jpg', 'jpeg'],
-        key=f"uploader_{current_key_val}"
+        "請直接將已改好檔名的小隊截圖拖曳至此（系統會自動抓取檔名中的日期、時間、目標與指揮官）：", 
+        accept_multiple_files=True, type=['png', 'jpg', 'jpeg'], key=f"uploader_{current_key_val}"
     )
 
-    is_uploading = False
     if uploaded_files:
-        st.markdown("<b style='color:#3a86c8;'>🖼️ 戰場核心影像載入預覽：</b>", unsafe_allow_html=True)
+        st.markdown("<b style='color:#3a86c8;'>🖼️ 戰場核心影像載入與檔名解析預覽：</b>", unsafe_allow_html=True)
         cols = st.columns(min(len(uploaded_files), 4))
         for idx, file in enumerate(uploaded_files):
             with cols[idx % 4]:
-                file_bytes = file.read()
                 file.seek(0)
-                if len(file_bytes) == 0:
-                    is_uploading = True
-                img_preview = Image.open(io.BytesIO(file_bytes))
-                st.image(img_preview, caption=f"軍情圖片 {idx+1}", use_container_width=True)
+                # 即時解構檔名展示給老大看
+                d, t, tg, cmd, tm = parse_filename_data(file.name)
+                
+                img_preview = Image.open(io.BytesIO(file.read()))
+                st.image(img_preview, use_container_width=True)
+                st.markdown(f"""
+                <div style='background-color:#111; padding:8px; border:1px solid #33270c; border-radius:5px; font-size:13px; line-height:1.5;'>
+                    <b style='color:#d4af37;'>📄 檔名:</b> <span class='filename-pill'>{file.name}</span><br>
+                    <b style='color:#00ffcc;'>📅 解析:</b> {d} | {t}<br>
+                    <b style='color:#ff00ff;'>🎯 目標:</b> {tg}<br>
+                    <b style='color:#ff4500;'>👑 統帥:</b> {cmd} | <b style='color:#ffcc00;'>分隊:</b> {tm}
+                </div>
+                """, unsafe_allow_html=True)
 
-    # =====================================================================
-    # 6. 操作控制台
-    # =====================================================================
     st.markdown("<br>", unsafe_allow_html=True)
     btn_col1, btn_col2 = st.columns(2)
-
     with btn_col1:
-        if is_uploading:
-            st.markdown("""
-                <button style="width: 100%; background-color: #222; color: #ff0000; border: 1px solid #ff0000; padding: 12px; font-weight: bold; border-radius: 4px; cursor: not-allowed; animation: blinker 1.5s linear infinite; height:65px;">
-                    ⏳ 戰術分隊影像校閱中...請稍後點火
-                </button>
-                <style>@keyframes blinker { 50% { opacity: 0.3; } }</style>
-            """, unsafe_allow_html=True)
-            execute_click = False
-        else:
-            button_placeholder = st.empty()
-            execute_click = button_placeholder.button("🔥 發動總攻擊！啟動狂盟核心點名認列", key="attack_btn", use_container_width=True)
-
+        button_placeholder = st.empty()
+        execute_click = button_placeholder.button("🔥 發動總攻擊！啟動狂盟核心點名認列", key="attack_btn", use_container_width=True)
     with btn_col2:
-        if is_uploading:
-            pass
-        else:
-            if st.button("🔄 熔爐重置 / 清理當前戰報準備下一場", key="reset_btn", use_container_width=True):
-                st.session_state['uploader_key'] = st.session_state.get('uploader_key', 0) + 1
-                st.rerun()
+        if st.button("🔄 熔爐重置 / 清理當前戰報準備下一場", key="reset_btn", use_container_width=True):
+            st.session_state['uploader_key'] = st.session_state.get('uploader_key', 0) + 1
+            st.rerun()
 
     # =====================================================================
-    # 7. 核心處理與報告輸出
+    # 6. 核心黑科技處理：多圖垂直拼接與檔名時空追蹤
     # =====================================================================
     if execute_click:
         if not api_key:
             st.error("⚠️ 老大！請先在左側邊欄鎖定您的 狂盟核心 API 金鑰！")
         elif uploaded_files:
-            button_placeholder.markdown("""
-                <div class='clan-loading-wrapper'>
-                    <div class='clan-loading-box'>
-                        ⚡ 狂盟核心大會師：雲端熔爐正全馬力運算中... 請老大稍候...
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
+            button_placeholder.markdown("<div class='clan-loading-wrapper'><div class='clan-loading-box'>⚡ 檔名流大熔爐啟動：正在重組圖片並注入 AI 防錯引擎...</div></div>", unsafe_allow_html=True)
             
-            time.sleep(0.2)
-            
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-2.5-flash')
-            
-            date_str = selected_date.strftime("%Y%m%d")
-            
-            # 🛡️ 鐵血防重核心：用於記錄在「相同日期、相同時間」下已經登記過的姓名
-            # 只要在此 Session/執行中 出現過第二次，立即蓋上 (重複登記) 印記
-            REGISTERED_NAMES_POOL = set()
-            
-            report_html = f"""
-            <div class='report-box'>
-                <div class='section-tag' style='background:none; border:none; padding:0; color:#ff0000; font-size:20px;'>🦅 狂盟點名大會師 - 成果報告庫</div>
-                <div style='font-size: 15px; margin: 15px 0 25px 0; line-height:1.6; border-bottom: 1px solid #443615; padding-bottom: 15px;'>
-                    <b style='color: #d4af37; font-size:16px;'>【本次戰報核心資訊】</b><br>
-                    戰役日期: <span style='color:#fff; font-weight:bold;'>{date_str}</span><br>
-                    吹哨時間: <span style='color:#fff; font-weight:bold;'>{selected_time}</span><br>
-                    征討目標: <span style='color:#ffcc00; font-weight:bold;'>{selected_target}</span><br>
-                    最高統帥: <span style='color:#ff0000; font-weight:bold;'>{selected_commander}</span>
-                </div>
-            """
-            
-            global_excel_idx = 1
-            has_any_data = False
-            raw_text_report = ""
-            
-            white_list_str = "、".join(VALID_NAMES)
-            
-            PROMPT_TEMPLATE = (
-                "你現在是《天堂》遊戲血盟的頂級行政秘書。請對這張圖片左下角的「藍色小隊名單 UI 區塊」進行最嚴密、最全面的地毯式掃描。\n"
-                "必須找出名單中的每一個人，絕對不准漏掉任何一個字元！\n\n"
-                f"請逐字核對以下【狂盟官方白名單】數據：\n{white_list_str}\n\n"
-                "【🔥 頂級特級鐵律：AI 模糊容錯與強制認列】\n"
-                "1. 由於遊戲字體與截圖清晰度問題，圖片中的文字可能產生簡繁錯置（如 氣 與 气）、相似字（如 1 與 一）或細微空格。\n"
-                "   只要圖片中的名字與上述【官方白名單】高度相似或音近，你必須「自動轉換為白名單上的標準正確文字」輸出！\n"
-                "2. 隊伍最上面第一行（正前方帶有黃金皇冠圖標）的名字是「隊長」。即使是最上面看到單字「齊」，他也是獨立的隊長行！絕對不准漏掉，不准跟下方的隊員合併！\n"
-                "3. 核心大絕招：只要你看到任何名字（不論是否在白名單內），只要他出現在左下角小隊欄位中，就必須逐字完整輸出！如果在白名單內找不到任何可以對應的相似字，就直接原字原樣輸出！\n\n"
-                "【精準輸出格式】：\n不准輸出任何額外引言或廢話，嚴格依據以下格式回傳名字：\n"
-                "[LEADER] 隊長名字\n[MEMBER] 隊員名字\n[MEMBER] 隊員名字"
-            )
+            # --- 🛠️ 影像拼接與動態對照表 ---
+            pil_images = []
+            meta_data_map = {} # 記錄每一張圖解構出來的戰報參數
             
             for idx, file in enumerate(uploaded_files, start=1):
                 file.seek(0)
-                file_bytes = file.read()
-                pil_image = Image.open(io.BytesIO(file_bytes))
+                img = Image.open(io.BytesIO(file.read())).convert("RGB")
+                pil_images.append(img)
                 
-                try:
-                    response = model.generate_content([PROMPT_TEMPLATE, pil_image])
-                    ai_output = response.text
-                    lines = ai_output.strip().split('\n')
-                    
-                    report_html += f"<span class='img-title'>📸 戰術分隊 {idx} ({file.name})：</span><br>"
-                    local_team_idx = 1 
-                    
-                    for line in lines:
-                        cleaned = line.replace("[LEADER]", "").replace("[MEMBER]", "").replace("(隊長)", "").replace(" ", "").strip()
-                        if not cleaned:
-                            continue
-                        
-                        matched_name = None
-                        # 多重碰撞過濾
-                        for v_name in VALID_NAMES:
-                            v_clean = v_name.replace(" ", "")
-                            if v_clean in cleaned or cleaned in v_clean:
-                                matched_name = v_name
-                                break
-                            alt_cleaned = cleaned.replace("气", "氣").replace("1", "一").replace("漾", "什麼漾子")
-                            alt_v = v_clean.replace("气", "氣").replace("1", "一")
-                            if alt_v in alt_cleaned or alt_cleaned in alt_v:
-                                matched_name = v_name
-                                break
-                        
-                        is_leader = "[LEADER]" in line or "隊長" in line or local_team_idx == 1
-                        position_str = "隊長" if is_leader else ""
-                        has_any_data = True
-                        
-                        # 定義最終要處理的姓名主體
-                        final_target_name = matched_name if matched_name else cleaned
-                        
-                        # 🚨 鐵血重頭戲：檢查相同日期相同時間的場次中，姓名是否已經存在！
-                        is_duplicate = final_target_name in REGISTERED_NAMES_POOL
-                        
-                        # 將此姓名塞入池中，作為後面小隊的比對基底
-                        REGISTERED_NAMES_POOL.add(final_target_name)
-                        
-                        # 建立職位後綴字（僅網頁呈現用）
-                        leader_suffix = " (隊長)" if is_leader else ""
-                        
-                        # -------------------------------------------------------------
-                        # A. 如果是【重複登記】的抓包名單（優先權最高）
-                        # -------------------------------------------------------------
-                        if is_duplicate:
-                            display_name = f"{final_target_name}(重複登記)"
-                            excel_row_base = f"{global_excel_idx}\t{date_str}\t{selected_time}\t{selected_target}\t{selected_commander}\t{display_name}\t{position_str}\n"
-                            raw_text_report += excel_row_base
-                            
-                            # 網頁報告：強制爆擊紅字顯示 (重複登記)
-                            report_html += f"<div class='unconfirmed-red'>{local_team_idx}. ⚠️ {final_target_name} <span style='color:#ff0000; font-weight:bold;'>(重複登記)</span>{leader_suffix}</div>"
-                        
-                        # -------------------------------------------------------------
-                        # B. 如果是正常名單且【白名單匹配成功】
-                        # -------------------------------------------------------------
-                        elif matched_name:
-                            excel_row_base = f"{global_excel_idx}\t{date_str}\t{selected_time}\t{selected_target}\t{selected_commander}\t{matched_name}\t{position_str}\n"
-                            raw_text_report += excel_row_base
-                            
-                            if is_leader:
-                                report_html += f"<div class='leader-orange'>{local_team_idx}. 🎖️ {matched_name}{leader_suffix}</div>"
-                            else:
-                                report_html += f"<div class='member-w'>{local_team_idx}. {matched_name}</div>"
-                        
-                        # -------------------------------------------------------------
-                        # C. 如果是正常名單但【不在白名單內】（待確認/更新）
-                        # -------------------------------------------------------------
-                        else:
-                            display_name = f"{cleaned}(待確認/更新)"
-                            excel_row_base = f"{global_excel_idx}\t{date_str}\t{selected_time}\t{selected_target}\t{selected_commander}\t{display_name}\t{position_str}\n"
-                            raw_text_report += excel_row_base
-                            
-                            report_html += f"<div class='unconfirmed-red'>{local_team_idx}. ⚠️ {cleaned} <span style='color:#ff0000; font-weight:bold;'>(待確認/更新)</span>{leader_suffix}</div>"
-                            
-                        local_team_idx += 1
-                        global_excel_idx += 1
-                            
-                except Exception as e:
-                    st.error(f"❌ 軍情影像 {idx} 處理失敗：{e}")
-                    
-            report_html += "</div>"
-            st.markdown(report_html, unsafe_allow_html=True)
+                # 解構該圖片的專屬檔名
+                d, t, tg, cmd, tm = parse_filename_data(file.name)
+                meta_data_map[idx] = {
+                    "date": d, "time": t, "target": tg, "commander": cmd, "team_num": tm, "filename": file.name
+                }
             
-            button_placeholder.button("🔥 發動總攻擊！啟動狂盟核心點名認列", key="attack_btn_done", use_container_width=True)
+            max_w = max(img.width for img in pil_images)
+            spacer_h = 40
+            total_h = sum(img.height for img in pil_images) + (len(pil_images) - 1) * spacer_h
             
-            if has_any_data:
-                st.markdown("<br><div class='section-tag'>📋 狂盟直貼 Excel 數據中心 (完美相容 7 大直欄)</div>", unsafe_allow_html=True)
-                st.markdown("<b style='color:#ffffff; font-size:15px;'>請直接對下方框內全選複製 (Ctrl+A → Ctrl+C)：</b>", unsafe_allow_html=True)
+            fused_image = Image.new("RGB", (max_w, total_h), (0, 0, 0))
+            current_y = 0
+            
+            image_seperator_instructions = ""
+            for idx, img in enumerate(pil_images, start=1):
+                fused_image.paste(img, (0, current_y))
+                image_seperator_instructions += f"第 {idx} 張圖片的開合標記是 [IMAGE_START_{idx}]，對應分隊號為 {meta_data_map[idx]['team_num']}。\n"
+                current_y += img.height + spacer_h
+            
+            # --- 🚀 發送單次 API 請求 ---
+            # 🛡️ 鐵血防重核心：因為改為檔名流，防重池擴大至同一日期、相同時間下的全場大掃描
+            REGISTERED_NAMES_POOL = set()
+            
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel('gemini-2.5-flash')
+            white_list_str = "、".join(VALID_NAMES)
+            
+            PROMPT_TEMPLATE = (
+                "你現在是《天堂》遊戲血盟的頂級行政秘書。\n"
+                "我上傳了一張由多張血盟小隊截圖「垂直拼接而成」的超大長圖。請由上到下進行地毯式掃描，絕對不准漏掉任何一個人的名字！\n\n"
+                f"【圖片分界對照指示】：\n{image_seperator_instructions}\n"
+                f"請逐字核對以下【狂盟官方白名單】數據：\n{white_list_str}\n\n"
+                "【🔥 頂級特級鐵律：AI 模糊容錯與強制認列】\n"
+                "1. 請依據拼接順序，精確辨識出每一張原圖裡出現的人。在輸出時，必須先打出該圖的標記如 `--- IMAGE 1 ---`，再輸出名單。\n"
+                "2. 由於遊戲字體清晰度問題，圖片中文字可能產生簡繁錯置（如 氣 與 气、漾 與 樣）或細微空格，只要與白名單高度相似或音近，你必須自動轉換為白名單上的標準正確文字輸出！\n"
+                "3. 每張小隊圖中最上面第一行（前方有黃金皇冠圖標）的是該隊「隊長」！必須獨立認列，絕對不准漏掉，不准跟下方的隊員合併！\n"
+                "4. 只要出現在小隊欄位中的名字，不論是否在白名單內，都必須完整輸出！如果白名單找不到，就直接原字原樣輸出！\n\n"
+                "【精準輸出格式】：\n嚴格依據以下格式回傳，不准有任何額外引言：\n"
+                "--- IMAGE 1 ---\n"
+                "[LEADER] 隊長名字\n"
+                "[MEMBER] 隊員名字\n"
+                "--- IMAGE 2 ---\n"
+                "[LEADER] 隊長名字"
+            )
+            
+            try:
+                response = model.generate_content([PROMPT_TEMPLATE, fused_image])
+                ai_output = response.text
                 
-                st.markdown("""
-                    <div class='clan-table-container'>
-                        <table class='clan-table'>
-                            <thead>
-                                <tr>
-                                    <th>序號</th>
-                                    <th>日期</th>
-                                    <th>時間</th>
-                                    <th>出團目標</th>
-                                    <th>指揮官</th>
-                                    <th>成員名單</th>
-                                    <th>職位</th>
-                                </tr>
-                            </thead>
-                        </table>
-                    </div>
-                """, unsafe_allow_html=True)
-                
-                st.text_area("", value=raw_text_report.strip(), height=250, key="copy_target", label_visibility="collapsed")
-                st.markdown("<br>", unsafe_allow_html=True)
-                
-                escaped_text = raw_text_report.strip().replace("`", "\\`").replace("'", "\\'")
-                js_button_html = f"""
-                <div style="text-align: center; width: 100%;">
-                    <button onclick="navigator.clipboard.writeText(`{escaped_text}`).then(() => alert('📋 報告老大：時空防重校正版數據已完美複製！已自動打擊重複登记。'));" 
-                    style="width: 100%; background: linear-gradient(180deg, #cc0000 0%, #880000 100%); color: white; border: 2px solid #d4af37; padding: 18px; font-size: 18px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 6px 15px rgba(255,0,0,0.4); text-shadow: 1px 1px 3px #000; letter-spacing:2px;">
-                        🦅 一鍵秒複製 7 大欄位狂盟核心數據 🦅
-                    </button>
-                </div>
+                # --- 📊 解析報告並與「檔名數據」完美熔合 ---
+                report_html = f"""
+                <div class='report-box'>
+                    <div class='section-tag' style='background:none; border:none; padding:0; color:#ff0000; font-size:20px;'>🦅 狂盟點名大會師 - 成果報告庫 (智慧檔名解構版)</div>
                 """
-                st.components.v1.html(js_button_html, height=80)
-            else:
-                st.warning("⚔️ 未能擷取到任何有效的戰盟成員數據，請確認金鑰是否過期。")
+                
+                global_excel_idx = 1
+                has_any_data = False
+                raw_text_report = ""
+                
+                current_img_idx = 0
+                local_team_idx = 1
+                
+                lines = ai_output.strip().split('\n')
+                for line in lines:
+                    line_upper = line.upper()
+                    if "--- IMAGE" in line_upper or "IMAGE_" in line_upper:
+                        import re
+                        match = re.search(r'\d+', line)
+                        if match:
+                            current_img_idx = int(match.group())
+                            local_team_idx = 1
+                            
+                            meta = meta_data_map.get(current_img_idx, {"date":"未知", "time":"未知", "target":"未知", "commander":"無", "team_num":str(current_img_idx), "filename":"未知"})
+                            report_html += f"""
+                            <div style='margin-top:20px; background-color:#121216; padding:12px; border-left:4px solid #ffcc00; border-radius:4px;'>
+                                <span style='color:#ffcc00; font-weight:bold; font-size:16px;'>📸 戰術分隊 {meta['team_num']}</span> 
+                                <span style='color:#888; font-size:13px;'>({meta['filename']})</span><br>
+                                <span style='color:#aaa; font-size:14px;'>戰報連動 ➔ 日期: <b style='color:#fff;'>{meta['date']}</b> | 時間: <b style='color:#fff;'>{meta['time']}</b> | 目標: <b style='color:#00ffcc;'>{meta['target']}</b> | 指揮官: <b style='color:#ff3333;'>{meta['commander']}</b></span>
+                            </div><br>
+                            """
+                        continue
+                    
+                    if not current_img_idx: 
+                        current_img_idx = 1
+                        meta = meta_data_map.get(current_img_idx, {"date":"未知", "time":"未知", "target":"未知", "commander":"無", "team_num":"1", "filename":"未知"})
+                        report_html += f"<div style='margin-top:20px; background-color:#121216; padding:12px; border-left:4px solid #ffcc00;'><span style='color:#ffcc00; font-weight:bold;'>📸 戰術分隊 1</span></div><br>"
+                        
+                    cleaned = line.replace("[LEADER]", "").replace("[MEMBER]", "").replace("(隊長)", "").replace(" ", "").strip()
+                    if not cleaned or "---" in cleaned:
+                        continue
+                        
+                    # 抓取該圖片專屬的檔名解構數據
+                    current_meta = meta_data_map.get(current_img_idx, {"date":"20260517", "time":"0000", "target":"未明", "commander":"無", "team_num":"1"})
+                    d_row = current_meta["date"]
+                    t_row = current_meta["time"]
+                    tg_row = current_meta["target"]
+                    cmd_row = current_meta["commander"]
+                    
+                    # 白名單碰撞
+                    matched_name = None
+                    for v_name in VALID_NAMES:
+                        v_clean = v_name.replace(" ", "")
+                        if v_clean in cleaned or cleaned in v_clean:
+                            matched_name = v_name
+                            break
+                        alt_cleaned = cleaned.replace("气", "氣").replace("1", "一").replace("漾", "什麼漾子")
+                        alt_v = v_clean.replace("气", "氣").replace("1", "一")
+                        if alt_v in alt_cleaned or alt_cleaned in alt_v:
+                            matched_name = v_name
+                            break
+                            
+                    is_leader = "[LEADER]" in line or "隊長" in line or local_team_idx == 1
+                    position_str = "隊長" if is_leader else ""
+                    has_any_data = True
+                    
+                    final_target_name = matched_name if matched_name else cleaned
+                    
+                    # 🚨 跨時空防重核心：檢查「同日期、同時間」下此姓名是否重複
+                    unique_key = f"{d_row}_{t_row}_{final_target_name}"
+                    is_duplicate = unique_key in REGISTERED_NAMES_POOL
+                    REGISTERED_NAMES_POOL.add(unique_key)
+                    
+                    leader_suffix = " (隊長)" if is_leader else ""
+                    
+                    if is_duplicate:
+                        display_name = f"{final_target_name}(重複登記)"
+                        raw_text_report += f"{global_excel_idx}\t{d_row}\t{t_row}\t{tg_row}\t{cmd_row}\t{display_name}\t{position_str}\n"
+                        report_html += f"<div class='unconfirmed-red'>{local_team_idx}. ⚠️ {final_target_name} <span style='color:#ff0000; font-weight:bold;'>(重複登記)</span>{leader_suffix}</div>"
+                    elif matched_name:
+                        raw_text_report += f"{global_excel_idx}\t{d_row}\t{t_row}\t{tg_row}\t{cmd_row}\t{matched_name}\t{position_str}\n"
+                        if is_leader: report_html += f"<div class='leader-orange'>{local_team_idx}. 🎖️ {matched_name}{leader_suffix}</div>"
+                        else: report_html += f"<div class='member-w'>{local_team_idx}. {matched_name}</div>"
+                    else:
+                        display_name = f"{cleaned}(待確認/更新)"
+                        raw_text_report += f"{global_excel_idx}\t{d_row}\t{t_row}\t{tg_row}\t{cmd_row}\t{display_name}\t{position_str}\n"
+                        report_html += f"<div class='unconfirmed-red'>{local_team_idx}. ⚠️ {cleaned} <span style='color:#ff0000; font-weight:bold;'>(待確認/更新)</span>{leader_suffix}</div>"
+                        
+                    local_team_idx += 1
+                    global_excel_idx += 1
+                    
+                report_html += "</div>"
+                st.markdown(report_html, unsafe_allow_html=True)
+                button_placeholder.button("🔥 發動總攻擊！啟動狂盟核心點名認列", key="attack_btn_done", use_container_width=True)
+                
+                if has_any_data:
+                    st.markdown("<br><div class='section-tag'>📋 狂盟直貼 Excel 數據中心 (完美相容 7 大直欄)</div>", unsafe_allow_html=True)
+                    st.markdown("""
+                        <div class='clan-table-container'>
+                            <table class='clan-table'>
+                                <thead>
+                                    <tr><th>序號</th><th>日期</th><th>時間</th><th>出團目標</th><th>指揮官</th><th>成員名單</th><th>職位</th></tr>
+                                </thead>
+                            </table>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    st.text_area("", value=raw_text_report.strip(), height=250, key="copy_target", label_visibility="collapsed")
+                    
+                    escaped_text = raw_text_report.strip().replace("`", "\\`").replace("'", "\\'")
+                    js_button_html = f"""
+                    <div style="text-align: center; width: 100%;">
+                        <button onclick="navigator.clipboard.writeText(`{escaped_text}`).then(() => alert('📋 報告老大：檔名流熔爐數據已完美複製！已成功解析所有圖片名稱特徵！'));" 
+                        style="width: 100%; background: linear-gradient(180deg, #cc0000 0%, #880000 100%); color: white; border: 2px solid #d4af37; padding: 18px; font-size: 18px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 6px 15px rgba(255,0,0,0.4); letter-spacing:2px;">
+                            🦅 一鍵秒複製 7 大欄位狂盟核心數據 🦅
+                        </button>
+                    </div>
+                    """
+                    st.components.v1.html(js_button_html, height=80)
+                
+            except Exception as ex:
+                st.error(f"❌ 大熔爐打包認列失敗，請檢查 API Key 是否正確。錯誤原因: {ex}")
